@@ -9,11 +9,19 @@ import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+// import com.alexmerz.graphviz.Parser
 import com.alexmerz.graphviz.Parser;
 import com.alexmerz.graphviz.ParseException;
 import com.alexmerz.graphviz.objects.Graph;
-import com.alexmerz.graphviz.objects.Node;
-import com.alexmerz.graphviz.objects.Edge;
+// import javax.xml.parsers
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /** This class implements the STAG server. */
 public final class GameServer {
@@ -39,6 +47,46 @@ public final class GameServer {
     */
     public GameServer(File entitiesFile, File actionsFile) {
         // TODO implement your server logic here
+        // parse entitiesFile
+        entitiesFileParser(entitiesFile);
+        // parse actionsFile
+        actionsFileParser(actionsFile);
+
+
+    }
+
+    void entitiesFileParser(File entitiesFile) {
+        FileReader reader;
+        Parser p = null;
+        try {
+            reader = new FileReader(entitiesFile);
+            p = new Parser();
+            p.parse(reader);
+        } catch (FileNotFoundException | ParseException e) {
+            // do something if the file couldn't be found or if the parser caused a parser error
+            System.out.println(e.getMessage());
+        }
+        // if parse entitiesFile successfully
+        assert p != null;
+        Graph wholeDocument = p.getGraphs().get(0);
+        ArrayList<Graph> sections = wholeDocument.getSubgraphs();
+    }
+
+    void actionsFileParser(File actionsFile) {
+        try {
+            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document document = builder.parse(actionsFile);
+            Element root = document.getDocumentElement();
+            NodeList actions = root.getChildNodes();
+            // Get the first action (only the odd items are actually actions - 1, 3, 5 etc.)
+            Element firstAction = (Element)actions.item(1);
+            Element triggers = (Element)firstAction.getElementsByTagName("triggers").item(0);
+            // Get the first trigger phrase
+            String firstTriggerPhrase = triggers.getElementsByTagName("keyword").item(0).getTextContent();
+            assertEquals("open", firstTriggerPhrase, "First trigger phrase was not 'open'");
+        } catch(ParserConfigurationException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
