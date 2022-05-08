@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeMap;
 // import com.alexmerz.graphviz.Parser
@@ -15,6 +16,9 @@ import com.alexmerz.graphviz.objects.Graph;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+
+import edu.uob.entity.Artefact;
+import edu.uob.entity.Player;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -87,7 +91,13 @@ public final class GameServer {
     }
 
     private void setInventory() {
-        //todo
+        GameAction inventory = new GameAction();
+        inventory.triggers.add("inventory");
+        //todo 肯定不是新建一个player，记得改。
+        Player currentPlayer = new Player("", "");
+//        inventory.subjects = (HashMap<String, GameEntity>) currentPlayer.getInventory();
+
+
     }
 
     private void setGameAction(NodeList actions) {

@@ -1,4 +1,4 @@
-package edu.uob.entities;
+package edu.uob.entity;
 
 import edu.uob.GameEntity;
 
