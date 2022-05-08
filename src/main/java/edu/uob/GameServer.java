@@ -1,15 +1,12 @@
 package edu.uob;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.TreeMap;
 // import com.alexmerz.graphviz.Parser
 import com.alexmerz.graphviz.Parser;
 import com.alexmerz.graphviz.ParseException;
@@ -18,10 +15,10 @@ import com.alexmerz.graphviz.objects.Graph;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /** This class implements the STAG server. */
 public final class GameServer {
@@ -29,6 +26,7 @@ public final class GameServer {
     private static final char END_OF_TRANSMISSION = 4;
 
     public static void main(String[] args) throws IOException {
+        //todo path里需要把文件名字改了。估计是从args里读后两个参数。
         File entitiesFile = Paths.get("config" + File.separator + "basic-entities.dot").toAbsolutePath().toFile();
         File actionsFile = Paths.get("config" + File.separator + "basic-actions.xml").toAbsolutePath().toFile();
         GameServer server = new GameServer(entitiesFile, actionsFile);
@@ -51,11 +49,9 @@ public final class GameServer {
         entitiesFileParser(entitiesFile);
         // parse actionsFile
         actionsFileParser(actionsFile);
-
-
     }
 
-    void entitiesFileParser(File entitiesFile) {
+    private void entitiesFileParser(File entitiesFile) {
         FileReader reader;
         Parser p = null;
         try {
@@ -72,21 +68,34 @@ public final class GameServer {
         ArrayList<Graph> sections = wholeDocument.getSubgraphs();
     }
 
-    void actionsFileParser(File actionsFile) {
+    private void actionsFileParser(File actionsFile) {
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document document = builder.parse(actionsFile);
             Element root = document.getDocumentElement();
             NodeList actions = root.getChildNodes();
-            // Get the first action (only the odd items are actually actions - 1, 3, 5 etc.)
-            Element firstAction = (Element)actions.item(1);
-            Element triggers = (Element)firstAction.getElementsByTagName("triggers").item(0);
-            // Get the first trigger phrase
-            String firstTriggerPhrase = triggers.getElementsByTagName("keyword").item(0).getTextContent();
-            assertEquals("open", firstTriggerPhrase, "First trigger phrase was not 'open'");
-        } catch(ParserConfigurationException e) {
+            setGameAction(actions);
+            TreeMap<String, HashSet<GameAction>> actionsMap = new TreeMap<String, HashSet<GameAction>>();
+        } catch(ParserConfigurationException | SAXException | IOException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    private void setBasicActions() {
+        //todo
+        setInventory();
+    }
+
+    private void setInventory() {
+        //todo
+    }
+
+    private void setGameAction(NodeList actions) {
+        // Get the first action (only the odd items are actually actions - 1, 3, 5 etc.)
+        Element firstAction = (Element)actions.item(1);
+        Element triggers = (Element)firstAction.getElementsByTagName("triggers").item(0);
+        // Get the first trigger phrase
+        String firstTriggerPhrase = triggers.getElementsByTagName("keyword").item(0).getTextContent();
     }
 
     /**
