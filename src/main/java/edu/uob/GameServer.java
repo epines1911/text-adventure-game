@@ -4,10 +4,6 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.TreeMap;
 // import com.alexmerz.graphviz.Parser
 import com.alexmerz.graphviz.Parser;
 import com.alexmerz.graphviz.ParseException;
@@ -17,8 +13,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 
-import edu.uob.entity.Artefact;
-import edu.uob.entity.Player;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -28,6 +22,8 @@ import org.xml.sax.SAXException;
 public final class GameServer {
 
     private static final char END_OF_TRANSMISSION = 4;
+    GameModel model;
+    private final GameController controller;
 
     public static void main(String[] args) throws IOException {
         //todo path里需要把文件名字改了。估计是从args里读后两个参数。
@@ -50,12 +46,14 @@ public final class GameServer {
     public GameServer(File entitiesFile, File actionsFile) {
         // TODO implement your server logic here
         // parse entitiesFile
-        entitiesFileParser(entitiesFile);
+        Graph entities = entitiesFileParser(entitiesFile);
         // parse actionsFile
-        actionsFileParser(actionsFile);
+        NodeList actions = actionsFileParser(actionsFile);
+        model = new GameModel(entities, actions);
+        controller = new GameController(model);
     }
 
-    private void entitiesFileParser(File entitiesFile) {
+    private Graph entitiesFileParser(File entitiesFile) {
         FileReader reader;
         Parser p = null;
         try {
@@ -68,44 +66,19 @@ public final class GameServer {
         }
         // if parse entitiesFile successfully
         assert p != null;
-        Graph wholeDocument = p.getGraphs().get(0);
-        ArrayList<Graph> sections = wholeDocument.getSubgraphs();
+        return p.getGraphs().get(0);
     }
 
-    private void actionsFileParser(File actionsFile) {
+    private NodeList actionsFileParser(File actionsFile) {
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document document = builder.parse(actionsFile);
             Element root = document.getDocumentElement();
-            NodeList actions = root.getChildNodes();
-            setGameAction(actions);
-            TreeMap<String, HashSet<GameAction>> actionsMap = new TreeMap<String, HashSet<GameAction>>();
+            return root.getChildNodes();
         } catch(ParserConfigurationException | SAXException | IOException e) {
             System.out.println(e.getMessage());
         }
-    }
-
-    private void setBasicActions() {
-        //todo
-        setInventory();
-    }
-
-    private void setInventory() {
-        GameAction inventory = new GameAction();
-        inventory.triggers.add("inventory");
-        //todo 肯定不是新建一个player，记得改。
-        Player currentPlayer = new Player("", "");
-//        inventory.subjects = (HashMap<String, GameEntity>) currentPlayer.getInventory();
-
-
-    }
-
-    private void setGameAction(NodeList actions) {
-        // Get the first action (only the odd items are actually actions - 1, 3, 5 etc.)
-        Element firstAction = (Element)actions.item(1);
-        Element triggers = (Element)firstAction.getElementsByTagName("triggers").item(0);
-        // Get the first trigger phrase
-        String firstTriggerPhrase = triggers.getElementsByTagName("keyword").item(0).getTextContent();
+        return null;
     }
 
     /**
@@ -116,6 +89,11 @@ public final class GameServer {
     */
     public String handleCommand(String command) {
         // TODO implement your server logic here
+        String[] tokens = command.split("\\s+");
+        if (controller != null) {
+            controller.commandParser(tokens);
+            return controller.getMessage();
+        }
         return "Thanks for your message: " + command;
     }
 
