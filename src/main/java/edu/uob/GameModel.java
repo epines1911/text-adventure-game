@@ -5,6 +5,7 @@ import com.alexmerz.graphviz.objects.Graph;
 import edu.uob.entity.*;
 import edu.uob.entity.Character;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.util.*;
@@ -13,7 +14,7 @@ public class GameModel {
     private TreeMap<String, HashSet<GameAction>> actionsMap = new TreeMap<String, HashSet<GameAction>>();
     private ArrayList<Player> players;
     private Location birthPlace;
-    private HashMap<String, Location> locationsMap = new HashMap<String, Location>();
+    private final HashMap<String, Location> locationsMap = new HashMap<String, Location>();
 
     public GameModel(Graph entities, NodeList actions) {
         setGameEntities(entities);
@@ -68,7 +69,6 @@ public class GameModel {
                     location.addArtefact(artefact);
                 }
             }
-
         }
     }
 
@@ -92,45 +92,57 @@ public class GameModel {
         //todo 肯定不是新建一个player，记得改。
         Player currentPlayer = new Player("", "");
 //        inventory.subjects = (HashMap<String, GameEntity>) currentPlayer.getInventory();
-
-
     }
 
     private void setGameAction(NodeList actions) {
-        // Get the first action (only the odd items are actually actions - 1, 3, 5 etc.)
-        Element firstAction = (Element)actions.item(1);
-        Element triggerssss = (Element)firstAction.getElementsByTagName("triggers").item(0);
+        //todo 可能会用到的comments
+//         Get the first action (only the odd items are actually actions - 1, 3, 5 etc.)
         // Get the first trigger phrase
-        String firstTriggerPhrase = triggerssss.getElementsByTagName("keyword").item(0).getTextContent();
-        String seTriggerPhrase = triggerssss.getElementsByTagName("keyword").item(1).getTextContent();
-        for (int i = 0; i < actions.getLength(); i++) {
+        for (int i = 1; i < actions.getLength(); i+=2) {
             GameAction newAction = new GameAction();
-            // todo 这里一个action要挨个设置以下属性
             Element action = (Element) actions.item(i);
-            Element triggers = (Element) action.getElementsByTagName("triggers").item(0);
-//            setTriggers(triggers);
-            Element subjects = (Element) action.getElementsByTagName("subjects").item(0);
-            Element consumed = (Element) action.getElementsByTagName("consumed").item(0);
-            Element produced = (Element) action.getElementsByTagName("produced").item(0);
+            setEntities(action, "subjects", newAction);
+            setEntities(action, "consumed", newAction);
+            setEntities(action, "produced", newAction);
             String narration = action.getElementsByTagName("narration").item(0).getTextContent();
-            newAction.narration = narration;
+            newAction.setNarration(narration);
+            Element triggers = (Element) action.getElementsByTagName("triggers").item(0);
+            setTriggers(triggers, newAction);
         }
     }
 
-    private void setTriggers(Element triggers) {
-        //
+    private void setTriggers(Element triggers, GameAction newAction) {
+        NodeList keywords = triggers.getElementsByTagName("keyword");
+        for (int i = 0; i < keywords.getLength(); i++) {
+            String keyword = keywords.item(i).getTextContent();
+            if (actionsMap.containsKey(keyword)) {
+                HashSet<GameAction> actions = actionsMap.get(keyword);
+                actions.add(newAction);
+            } else {
+                HashSet<GameAction> actions = new HashSet<GameAction>();
+                actions.add(newAction);
+                actionsMap.put(keyword, actions);
+            }
+        }
     }
 
-    private void setSubjects(Element subjects, GameAction action) {
-        //
-    }
-
-    private void setConsumed(Element consumed, GameAction action) {
-        //
-    }
-
-    private void setProduced(Element produced, GameAction action) {
-        //
+    private void setEntities(Element action, String tagName, GameAction newAction) {
+        int n = action.getElementsByTagName(tagName).getLength();
+        NodeList tags = action.getElementsByTagName(tagName);
+        for (int i = 0; i < n; i++) {
+            Element entities = (Element) tags.item(i);
+            int length = entities.getElementsByTagName("entity").getLength();
+            for (int j = 0; j < length; j++) {
+                String name = entities.getElementsByTagName("entity").item(j).getTextContent();
+                if (tagName.equalsIgnoreCase("subjects")) {
+                    newAction.addSubjects(name);
+                } else if (tagName.equalsIgnoreCase("consumed")) {
+                    newAction.addConsumed(name);
+                } else if (tagName.equalsIgnoreCase("produced")) {
+                    newAction.addProduced(name);
+                }
+            }
+        }
     }
 
     public HashMap<String, Location> getLocationsMap() {
