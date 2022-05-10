@@ -12,6 +12,10 @@ public class Location extends GameEntity {
 
     public Location(String name, String description) {
         super(name, description);
+        paths = new HashMap<String, Location>();
+        artefacts = new HashMap<String, Artefact>();
+        furniture = new HashMap<String, Furniture>();
+        characters = new HashMap<String, Character>();
     }
 
     public HashMap<String, Location> getPaths() {
@@ -40,5 +44,9 @@ public class Location extends GameEntity {
 
     public void addCharacter(Character entity) {
         characters.put(entity.getName(), entity);
+    }
+
+    public void addPaths(Location entity) {
+        paths.put(entity.getName(), entity);
     }
 }
