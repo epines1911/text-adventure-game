@@ -23,14 +23,14 @@ public class GameController {
             case "GET" -> getAction(tokens);
             case "DROP" -> dropAction(tokens);
             case "GOTO" -> gotoAction(tokens);
-//            case "LOOK" -> parseInsertCmd(tokenizer.nextToken());
+            case "LOOK" -> lookAction();
             default -> normalActionParser(trigger, tokens);
         }
     }
 
     private void inventoryAction() {
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
-        message += "There are " + inventory.size() + " items in your inventory: \n";
+        message += "There are " + inventory.size() + " artefacts in your inventory: \n";
         Iterator<String> names = inventory.keySet().iterator();
         while (names.hasNext()) {
             message += names;
@@ -74,15 +74,26 @@ public class GameController {
             throw new GameException("Please enter the location's name. e.g: goto name");
         }
         String locationName = tokens[1];
-        if (!model.getLocationsMap().containsKey(locationName)) {
-            throw new GameException("There is no location named " + locationName);
+        //todo 为了减少complexity把两个错误项合并了。可能信息不够准确。不知道要不要改回来。
+//        if (!model.getLocationsMap().containsKey(locationName)) {
+//            throw new GameException("There is no location named " + locationName);
+//        }
+        if (!model.getLocationsMap().containsKey(locationName) ||
+                !model.getCurrentLocation().getPaths().containsKey(locationName)) {
+            throw new GameException("There is no path to go to " + locationName);
         }
         model.setCurrentLocation(locationName);
         message = "Now you are at " + locationName;
     }
 
     private void lookAction() {
-        //
+        HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
+        message += "There are " + artefacts.size() + " artefacts in this location: \n";
+        Iterator<String> names = artefacts.keySet().iterator();
+        while (names.hasNext()) {
+            message += names;
+            message += "\n";
+        }
     }
 
     private void normalActionParser(String trigger, String[] tokens) throws GameException {

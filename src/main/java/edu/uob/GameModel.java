@@ -43,6 +43,7 @@ public class GameModel {
             locationsMap.put(name, location);
             if (id.equalsIgnoreCase("cluster001")) {
                 birthPlace = location;
+                currentLocation = name;
             }
             if (id.equalsIgnoreCase("cluster999")) {
                 storeroom = location;
