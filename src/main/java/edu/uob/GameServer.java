@@ -92,7 +92,7 @@ public final class GameServer {
         String[] tokens = command.split("\\s+");
         if (controller != null) {
             try {
-                controller.commandParser(command, tokens);
+                controller.commandParser(tokens);
             } catch (GameException e) {
                 e.printStackTrace();
             }

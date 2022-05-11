@@ -12,7 +12,7 @@ public class GameController {
         model = gameModel;
     }
 
-    public void commandParser(String command, String[] tokens) throws GameException {
+    public void commandParser(String[] tokens) throws GameException {
         message = "";
         String trigger = tokens[0].toLowerCase();
         if (!model.getActionsMap().containsKey(trigger)) {
@@ -89,9 +89,17 @@ public class GameController {
     private void lookAction() {
         HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
         message += "There are " + artefacts.size() + " artefacts in this location: \n";
-        Iterator<String> names = artefacts.keySet().iterator();
-        while (names.hasNext()) {
-            message += names;
+        for (Artefact artefact: artefacts.values()) {
+            message += artefact.getName();
+            message += ": ";
+            message += artefact.getDescription();
+            message += "\n";
+        }
+        Set<String> paths = model.getCurrentLocation().getPaths().keySet();
+        message += "There are " + paths.size() + " paths: \n";
+        for (String pathName :
+                paths) {
+            message += pathName;
             message += "\n";
         }
     }
