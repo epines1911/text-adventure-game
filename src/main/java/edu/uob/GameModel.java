@@ -15,6 +15,7 @@ public class GameModel {
     private Location birthPlace;
     private Player currentPlayer;
     private Location storeroom;
+    private String currentLocation;
     private final HashMap<String, Location> locationsMap = new HashMap<String, Location>();
 
     public GameModel(Graph entities, NodeList actions) {
@@ -82,18 +83,6 @@ public class GameModel {
         }
     }
 
-    private void setBasicActions() {
-        //todo
-        setInventory();
-    }
-
-    private void setInventory() {
-        GameAction inventory = new GameAction();
-        //todo 肯定不是新建一个player，记得改。
-        Player currentPlayer = new Player("", "");
-        Set<String> subjectsName = currentPlayer.getInventory().keySet();
-    }
-
     private void setGameAction(NodeList actions) {
         //todo 可能会用到的comments
 //         Get the first action (only the odd items are actually actions - 1, 3, 5 etc.)
@@ -159,5 +148,13 @@ public class GameModel {
 
     public Location getStoreroom() {
         return storeroom;
+    }
+
+    public Location getBirthPlace() {
+        return birthPlace;
+    }
+
+    public String getCurrentLocation() {
+        return currentLocation;
     }
 }
