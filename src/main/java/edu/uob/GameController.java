@@ -22,7 +22,7 @@ public class GameController {
             case "INV", "INVENTORY" -> inventoryAction();
             case "GET" -> getAction(tokens);
             case "DROP" -> dropAction(tokens);
-//            case "GOTO" -> parseAlterCmd(tokenizer.nextToken());
+            case "GOTO" -> gotoAction(tokens);
 //            case "LOOK" -> parseInsertCmd(tokenizer.nextToken());
             default -> normalActionParser(trigger, tokens);
         }
@@ -39,9 +39,11 @@ public class GameController {
     }
 
     private void getAction(String[] tokens) throws GameException {
+        if (tokens.length < 2) {
+            throw new GameException("Please enter the item's name. e.g: get name");
+        }
         String name = tokens[1]; //todo 如果允许一次性捡多个东西的话就挨个匹配tokens里面的string
-        HashMap<String, Artefact> artefacts = model.getLocationsMap()
-                .get(model.getCurrentLocation()).getArtefacts();
+        HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
         if (!artefacts.containsKey(name)) {
             throw new GameException("There is no artefact named " + name + " in the current location");
         }
@@ -52,21 +54,31 @@ public class GameController {
     }
 
     private void dropAction(String[] tokens) throws GameException {
+        if (tokens.length < 2) {
+            throw new GameException("Please enter the item's name. e.g: drop name");
+        }
         String name = tokens[1]; //todo 如果允许一次性扔多个东西的话就挨个匹配tokens里面的string
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         if (!inventory.containsKey(name)) {
             throw new GameException("There is no artefact named " + name + " in the inventory");
         }
-        HashMap<String, Artefact> artefacts = model.getLocationsMap()
-                .get(model.getCurrentLocation()).getArtefacts();
+        HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
         Artefact newArtefact = inventory.get(name);
         artefacts.put(name, newArtefact);
         model.getCurrentPlayer().getInventory().remove(name);
         message = "You dropped " + name;
     }
 
-    private void gotoAction() {
-        //
+    private void gotoAction(String[] tokens) throws GameException {
+        if (tokens.length < 2) {
+            throw new GameException("Please enter the location's name. e.g: goto name");
+        }
+        String locationName = tokens[1];
+        if (!model.getLocationsMap().containsKey(locationName)) {
+            throw new GameException("There is no location named " + locationName);
+        }
+        model.setCurrentLocation(locationName);
+        message = "Now you are at " + locationName;
     }
 
     private void lookAction() {

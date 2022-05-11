@@ -13,7 +13,7 @@ public class GameModel {
     private final TreeMap<String, HashSet<GameAction>> actionsMap = new TreeMap<String, HashSet<GameAction>>();
     private ArrayList<Player> players;
     private Location birthPlace;
-    private Player currentPlayer;
+    private Player currentPlayer;//todo 要不要只记current player的名字，然后就像current location那样现场查找
     private Location storeroom;
     private String currentLocation;
     private final HashMap<String, Location> locationsMap = new HashMap<String, Location>();
@@ -154,7 +154,11 @@ public class GameModel {
         return birthPlace;
     }
 
-    public String getCurrentLocation() {
-        return currentLocation;
+    public Location getCurrentLocation() {
+        return locationsMap.get(currentLocation);
+    }
+
+    public void setCurrentLocation(String locationName) {
+        currentLocation = locationName;
     }
 }
