@@ -5,15 +5,16 @@ import com.alexmerz.graphviz.objects.Graph;
 import edu.uob.entity.*;
 import edu.uob.entity.Character;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.util.*;
 
 public class GameModel {
-    private TreeMap<String, HashSet<GameAction>> actionsMap = new TreeMap<String, HashSet<GameAction>>();
+    private final TreeMap<String, HashSet<GameAction>> actionsMap = new TreeMap<String, HashSet<GameAction>>();
     private ArrayList<Player> players;
     private Location birthPlace;
+    private Player currentPlayer;
+    private Location storeroom;
     private final HashMap<String, Location> locationsMap = new HashMap<String, Location>();
 
     public GameModel(Graph entities, NodeList actions) {
@@ -42,10 +43,9 @@ public class GameModel {
             if (id.equalsIgnoreCase("cluster001")) {
                 birthPlace = location;
             }
-            // todo 可能用得到的storeroom
-//            if (id.equalsIgnoreCase("cluster999")) {
-//                storeroom = location;
-//            }
+            if (id.equalsIgnoreCase("cluster999")) {
+                storeroom = location;
+            }
         }
     }
 
@@ -91,7 +91,7 @@ public class GameModel {
         GameAction inventory = new GameAction();
         //todo 肯定不是新建一个player，记得改。
         Player currentPlayer = new Player("", "");
-//        inventory.subjects = (HashMap<String, GameEntity>) currentPlayer.getInventory();
+        Set<String> subjectsName = currentPlayer.getInventory().keySet();
     }
 
     private void setGameAction(NodeList actions) {
@@ -147,5 +147,17 @@ public class GameModel {
 
     public HashMap<String, Location> getLocationsMap() {
         return locationsMap;
+    }
+
+    public TreeMap<String, HashSet<GameAction>> getActionsMap() {
+        return actionsMap;
+    }
+
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public Location getStoreroom() {
+        return storeroom;
     }
 }

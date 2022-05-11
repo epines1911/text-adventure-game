@@ -7,6 +7,7 @@ import java.util.TreeMap;
 
 public class GameAction
 {
+    //todo 其实里面的内容应该是能保证unique的，arraylist并没有unique的机制，是否要考虑换个data structure
     private final ArrayList<String> subjects;
     private final ArrayList<String> consumed;
     private final ArrayList<String> produced;
