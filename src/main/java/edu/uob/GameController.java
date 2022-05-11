@@ -21,7 +21,7 @@ public class GameController {
         switch (trigger.toUpperCase()) {
             case "INV", "INVENTORY" -> inventoryAction();
             case "GET" -> getAction(tokens);
-//            case "DROP" -> parseDropCmd(tokenizer.nextToken());
+            case "DROP" -> dropAction(tokens);
 //            case "GOTO" -> parseAlterCmd(tokenizer.nextToken());
 //            case "LOOK" -> parseInsertCmd(tokenizer.nextToken());
             default -> normalActionParser(trigger, tokens);
@@ -39,7 +39,7 @@ public class GameController {
     }
 
     private void getAction(String[] tokens) throws GameException {
-        String name = tokens[1];
+        String name = tokens[1]; //todo 如果允许一次性捡多个东西的话就挨个匹配tokens里面的string
         HashMap<String, Artefact> artefacts = model.getLocationsMap()
                 .get(model.getCurrentLocation()).getArtefacts();
         if (!artefacts.containsKey(name)) {
@@ -51,8 +51,18 @@ public class GameController {
         message = "You picked up " + name;
     }
 
-    private void dropAction() {
-        //
+    private void dropAction(String[] tokens) throws GameException {
+        String name = tokens[1]; //todo 如果允许一次性扔多个东西的话就挨个匹配tokens里面的string
+        HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
+        if (!inventory.containsKey(name)) {
+            throw new GameException("There is no artefact named " + name + " in the inventory");
+        }
+        HashMap<String, Artefact> artefacts = model.getLocationsMap()
+                .get(model.getCurrentLocation()).getArtefacts();
+        Artefact newArtefact = inventory.get(name);
+        artefacts.put(name, newArtefact);
+        model.getCurrentPlayer().getInventory().remove(name);
+        message = "You dropped " + name;
     }
 
     private void gotoAction() {
