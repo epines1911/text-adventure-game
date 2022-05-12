@@ -17,17 +17,27 @@ public class Player extends GameEntity {
     }
 
     public void healthLevelUp() {
-        this.healthLevel = healthLevel + 1;
+        if (healthLevel < 3) {
+            healthLevel += 1;
+        }
     }
 
     public void healthLevelDown() {
         if (healthLevel < 1) {
             return;
         }
-        this.healthLevel = healthLevel - 1;
+        healthLevel -= 1;
     }
 
     public int getHealthLevel() {
         return healthLevel;
+    }
+
+    public boolean isDeath() {
+        return healthLevel < 1;
+    }
+
+    public void setFullHealth() {
+        healthLevel = 3;
     }
 }

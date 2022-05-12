@@ -29,6 +29,7 @@ public class GameController {
             case "DROP" -> dropAction(tokens);
             case "GOTO" -> gotoAction(tokens);
             case "LOOK" -> lookAction();
+            case "HEALTH" -> healthAction();
             default -> normalActionParser(names[1].toLowerCase(), tokens);
         }
     }
@@ -64,6 +65,7 @@ public class GameController {
         builtInTrigger.add("drop");
         builtInTrigger.add("goto");
         builtInTrigger.add("look");
+        builtInTrigger.add("health");
         int counter = 0;
         String aimTrigger = "";
         for (String trigger : builtInTrigger) {
@@ -182,6 +184,10 @@ public class GameController {
         }
     }
 
+    private void healthAction() {
+        message = "Your health is " + model.getCurrentPlayer().getHealthLevel();
+    }
+
     private void normalActionParser(String command, String[] tokens) throws GameException {
         TreeMap<String, HashSet<GameAction>> actionMap = model.getActionsMap();
         Set<String> triggers = actionMap.keySet();
@@ -214,7 +220,7 @@ public class GameController {
                     counter += 1;//todo action里的subjects用arraylist记录的，不咋地，无法防止重复。
                 }
             }
-            if (counter == subjects.size()) {
+            if (counter <= subjects.size()) {
                 if (aimAction != null && aimAction != action) {
                     throw new GameException("Find more than one action to be executed.");
                 }
@@ -232,6 +238,7 @@ public class GameController {
         HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
         HashMap<String, Furniture> furniture = model.getCurrentLocation().getFurniture();
         HashMap<String, Character> characters = model.getCurrentLocation().getCharacters();
+        HashMap<String, Location> paths = model.getCurrentLocation().getPaths();
 
 
 
