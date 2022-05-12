@@ -96,7 +96,7 @@ public class GameController {
             throw new GameException("Please enter the item's name. e.g: get name");
         }
         tokens[Arrays.asList(tokens).indexOf("get")] = "";// delete the string of 'trigger' in tokens
-        HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
+        HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
         Set<String> key = artefacts.keySet();
         String aimName = checkDoubleSubjects(tokens, key);
         Artefact newArtefact = artefacts.get(aimName);
@@ -130,7 +130,7 @@ public class GameController {
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         Set<String> key = inventory.keySet();
         String aimName = checkDoubleSubjects(tokens, key);
-        HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
+        HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
         Artefact newArtefact = inventory.get(aimName);
         artefacts.put(aimName, newArtefact);
         model.getCurrentPlayer().getInventory().remove(aimName);
@@ -142,17 +142,17 @@ public class GameController {
             throw new GameException("Please enter the location's name. e.g: goto name");
         }
         tokens[Arrays.asList(tokens).indexOf("goto")] = "";// delete the string of 'trigger' in tokens
-        Set<String> key = model.getCurrentLocation().getPaths().keySet();
+        Set<String> key = model.getCurrentPlayer().getLocation().getPaths().keySet();
         String aimName = checkDoubleSubjects(tokens, key);
-        model.setCurrentLocation(aimName);
+        model.getCurrentPlayer().setLocation(model.getLocation(aimName));
             message += "You are in " + aimName +": "
-                + model.getCurrentLocation().getDescription() +"\n";
+                + model.getCurrentPlayer().getLocation().getDescription() +"\n";
         lookAction();
     }
 
     private void lookAction() {
         //todo 这里面代码重复度高，说不定可以浓缩。
-        HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
+        HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
         message += "There are " + artefacts.size() + " artefacts in this location: \n";
         for (Artefact artefact: artefacts.values()) {
             message += artefact.getName();
@@ -160,7 +160,7 @@ public class GameController {
             message += artefact.getDescription();
             message += "\n";
         }
-        HashMap<String, Furniture> furniture = model.getCurrentLocation().getFurniture();
+        HashMap<String, Furniture> furniture = model.getCurrentPlayer().getLocation().getFurniture();
         message += "There are " + furniture.size() + " furniture in this location: \n";
         for (Furniture furnitureItem: furniture.values()) {
             message += furnitureItem.getName();
@@ -168,7 +168,7 @@ public class GameController {
             message += furnitureItem.getDescription();
             message += "\n";
         }
-        HashMap<String, Character> characters = model.getCurrentLocation().getCharacters();
+        HashMap<String, Character> characters = model.getCurrentPlayer().getLocation().getCharacters();
         message += "There are " + characters.size() + " characters in this location: \n";
         for (Character character: characters.values()) {
             message += character.getName();
@@ -176,7 +176,7 @@ public class GameController {
             message += character.getDescription();
             message += "\n";
         }
-        Set<String> paths = model.getCurrentLocation().getPaths().keySet();
+        Set<String> paths = model.getCurrentPlayer().getLocation().getPaths().keySet();
         message += "There are " + paths.size() + " paths: \n";
         for (String pathName : paths) {
             message += pathName;
@@ -235,10 +235,10 @@ public class GameController {
 
     private void executeAction(GameAction action) throws GameException {
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
-        HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
-        HashMap<String, Furniture> furniture = model.getCurrentLocation().getFurniture();
-        HashMap<String, Character> characters = model.getCurrentLocation().getCharacters();
-        HashMap<String, Location> paths = model.getCurrentLocation().getPaths();
+        HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
+        HashMap<String, Furniture> furniture = model.getCurrentPlayer().getLocation().getFurniture();
+        HashMap<String, Character> characters = model.getCurrentPlayer().getLocation().getCharacters();
+        HashMap<String, Location> paths = model.getCurrentPlayer().getLocation().getPaths();
 
 
 

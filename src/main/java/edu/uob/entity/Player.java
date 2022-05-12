@@ -7,9 +7,19 @@ import java.util.HashMap;
 public class Player extends GameEntity {
     HashMap<String, Artefact> inventory;
     int healthLevel = 3;
-    public Player(String name, String description) {
+    Location currentLocation;
+    public Player(String name, String description, Location birthPlace) {
         super(name, description);
         inventory = new HashMap<>();
+        currentLocation = birthPlace;
+    }
+
+    public void setLocation(Location aimLocation) {
+        currentLocation = aimLocation;
+    }
+
+    public Location getLocation() {
+        return currentLocation;
     }
 
     public HashMap<String, Artefact> getInventory() {

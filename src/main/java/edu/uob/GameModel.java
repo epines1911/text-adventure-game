@@ -15,7 +15,7 @@ public class GameModel {
     private Location birthPlace;
     private String currentPlayer;
     private Location storeroom;
-    private String currentLocation;
+    private String currentLocation; //todo delete
     private final HashMap<String, Location> locationsMap;
 
     public GameModel(Graph entities, NodeList actions) {
@@ -158,20 +158,20 @@ public class GameModel {
         return birthPlace;
     }
 
-    public Location getCurrentLocation() {
-        return locationsMap.get(currentLocation);
+    public Location getLocation(String name) {
+        return locationsMap.get(name);
     }
-
-    public void setCurrentLocation(String locationName) {
-        currentLocation = locationName;
-    }
+// todo delete
+//    public void setCurrentLocation(String locationName) {
+//        currentLocation = locationName;
+//    }
 
     public void setCurrentPlayer(String playerName) {
         currentPlayer = playerName;
     }
 
     public void addPlayer(String playerName) {
-        Player newPlayer = new Player(playerName, "");
+        Player newPlayer = new Player(playerName, "", birthPlace);
         players.put(playerName, newPlayer);
     }
 
