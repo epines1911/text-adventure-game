@@ -93,7 +93,7 @@ public final class GameServer {
             try {
                 controller.commandParser(command);
             } catch (GameException e) {
-                e.printStackTrace();
+                return e.getMessage();
             }
             return controller.getMessage();
         }
