@@ -22,7 +22,6 @@ public class GameController {
         }
         setPlayer(names[0]);
         String[] tokens = names[1].toLowerCase().split("\\s+");
-//        String trigger = tokens[1].toLowerCase();
         String trigger = checkDoubleTrigger(names[1].toLowerCase());
         switch (trigger.toUpperCase()) {
             case "INV", "INVENTORY" -> inventoryAction();
@@ -66,20 +65,15 @@ public class GameController {
         builtInTrigger.add("goto");
         builtInTrigger.add("look");
         int counter = 0;
-        String aimTrigger = null;
+        String aimTrigger = "";
         for (String trigger : builtInTrigger) {
             if (command.contains(trigger)) {
                 counter += 1;
-            }
-            if (counter > 1) {
-                throw new GameException("Find more than one built-in action to be executed.");
-            }
-            if (aimTrigger == null) {
+                if (counter > 1) {
+                    throw new GameException("Find more than one built-in action to be executed.");
+                }
                 aimTrigger = trigger;
             }
-        }
-        if (counter == 0) {
-            throw new GameException("Cannot find an built-in action.");
         }
         return aimTrigger;
     }
@@ -99,10 +93,17 @@ public class GameController {
         if (tokens.length < 3) {
             throw new GameException("Please enter the item's name. e.g: get name");
         }
-        tokens[1] = ""; // delete the string of 'trigger' in tokens
+        tokens[Arrays.asList(tokens).indexOf("get")] = "";// delete the string of 'trigger' in tokens
         HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
         Set<String> key = artefacts.keySet();
-        //todo 拆成小函数，从这开始
+        String aimName = checkDoubleSubjects(tokens, key);
+        Artefact newArtefact = artefacts.get(aimName);
+        model.getCurrentPlayer().getInventory().put(aimName, newArtefact);
+        artefacts.remove(aimName);
+        message = "You picked up a " + aimName;
+    }
+
+    private String checkDoubleSubjects(String[] tokens, Set<String> key) throws GameException {
         String aimName = null;
         for (String token : tokens) {
             if (key.contains(token.toLowerCase())) {
@@ -116,41 +117,17 @@ public class GameController {
         if (aimName == null) {
             throw new GameException("Cannot find this artefact in the current location.");
         }
-        // TODO: 2022/5/12 拆成小函数，到这结束
-//        String name = tokens[2]; //todo delete
-//        if (!artefacts.containsKey(name)) {
-//            throw new GameException("There is no artefact named " + name + " in the current location");
-//        } //todo delete
-        Artefact newArtefact = artefacts.get(aimName);
-        model.getCurrentPlayer().getInventory().put(aimName, newArtefact);
-        artefacts.remove(aimName);
-        message = "You picked up a " + aimName;
+        return aimName;
     }
 
     private void dropAction(String[] tokens) throws GameException {
         if (tokens.length < 3) {
             throw new GameException("Please enter the item's name. e.g: drop name");
         }
-        tokens[1] = ""; // delete the string of 'trigger' in tokens
+        tokens[Arrays.asList(tokens).indexOf("drop")] = "";// delete the string of 'trigger' in tokens
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         Set<String> key = inventory.keySet();
-        String aimName = null;
-        for (String token : tokens) {
-            if (key.contains(token.toLowerCase())) {
-                if (aimName == null || aimName.equalsIgnoreCase(token)) {
-                    aimName = token.toLowerCase();
-                } else {
-                    throw new GameException("Find more than one artefact to drop.");
-                }
-            }
-        }
-        if (aimName == null) {
-            throw new GameException("Cannot find this artefact in the inventory.");
-        }
-//        String name = tokens[2];//todo delete
-//        if (!inventory.containsKey(name)) {
-//            throw new GameException("There is no artefact named " + name + " in the inventory");
-//        }//todo delete
+        String aimName = checkDoubleSubjects(tokens, key);
         HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
         Artefact newArtefact = inventory.get(aimName);
         artefacts.put(aimName, newArtefact);
@@ -162,25 +139,9 @@ public class GameController {
         if (tokens.length < 3) {
             throw new GameException("Please enter the location's name. e.g: goto name");
         }
-        tokens[1] = ""; // delete the string of 'trigger' in tokens
+        tokens[Arrays.asList(tokens).indexOf("goto")] = "";// delete the string of 'trigger' in tokens
         Set<String> key = model.getCurrentLocation().getPaths().keySet();
-        String aimName = null;
-        for (String token : tokens) {
-            if (key.contains(token.toLowerCase())) {
-                if (aimName == null || aimName.equalsIgnoreCase(token)) {
-                    aimName = token.toLowerCase();
-                } else {
-                    throw new GameException("Find more than one location to go.");
-                }
-            }
-        }
-        if (aimName == null) {
-            throw new GameException("Cannot find a path to go to this location.");
-        }
-//        String locationName = tokens[2];
-//        if (!model.getCurrentLocation().getPaths().containsKey(locationName)) {
-//            throw new GameException("There is no path to go to " + locationName);
-//        }
+        String aimName = checkDoubleSubjects(tokens, key);
         model.setCurrentLocation(aimName);
             message += "You are in " + aimName +": "
                 + model.getCurrentLocation().getDescription() +"\n";
@@ -239,35 +200,8 @@ public class GameController {
         if (aimActionAet == null) {
             throw new GameException("Cannot find a valid trigger in command.");
         }
-
-//        if (!model.getActionsMap().containsKey(trigger)) {
-//            throw new GameException("Cannot find " + trigger + ", please check this word.");
-//        }
-//        HashSet<GameAction> actions = model.getActionsMap().get(trigger);
-
-        // find which action should be executed
+        // compare subjects and find which action should be executed
         checkSubjects(aimActionAet, command);
-
-
-
-//        GameAction aimAction = null;
-//        for (GameAction action: actions) {
-//            ArrayList<String> subjects = action.getSubjects();
-//            int counter = 0;
-//            for (int i = 0; i < subjects.size(); i++) {
-//                if (Arrays.asList(tokens).contains(subjects.get(i))) {
-//                    counter += 1;//todo action里的subjects用arraylist记录的，不咋地，无法防止重复。
-//                }
-//                if (counter == subjects.size()) {
-//                    aimAction = action;
-//                }
-//            }
-//        }
-//        if (aimAction == null) {
-//            throw new GameException("Cannot find an action related to " + trigger);
-//        } else {
-//            executeAction(aimAction);
-//        }
     }
 
     private void checkSubjects(HashSet<GameAction> actions, String command) throws GameException {
@@ -275,8 +209,8 @@ public class GameController {
         for (GameAction action: actions) {
             ArrayList<String> subjects = action.getSubjects();
             int counter = 0;
-            for (int i = 0; i < subjects.size(); i++) {
-                if (command.toLowerCase().contains(subjects.get(i))) {
+            for (String subject : subjects) {
+                if (command.toLowerCase().contains(subject)) {
                     counter += 1;//todo action里的subjects用arraylist记录的，不咋地，无法防止重复。
                 }
             }
@@ -295,6 +229,12 @@ public class GameController {
 
     private void executeAction(GameAction action) throws GameException {
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
+        HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
+        HashMap<String, Furniture> furniture = model.getCurrentLocation().getFurniture();
+        HashMap<String, Character> characters = model.getCurrentLocation().getCharacters();
+
+
+
         ArrayList<String> consumedItems = action.getConsumed();
         for (String item : consumedItems) {
             if (!inventory.containsKey(item)) {
