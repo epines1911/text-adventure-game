@@ -38,10 +38,22 @@ final class BasicCommandTests {
   void testMultiplePlayers() {
     server.handleCommand("player a: look");
     server.handleCommand("player b: look");
-    //todo 我想在这里测一下，我成功加入了两个玩家，但我不知道怎么检测……
+    //todo 我想在这里测一下，我成功加入了两个玩家，但我不知道怎么检测……debug里确实是两个玩家了。
 //    assertTrue();
 //    assertTrue();
 //    assertTrue();
+  }
+
+  @Test
+  void testMultipleActions() {
+    String response1 = server.handleCommand("player a: goto forest");
+    assertTrue(response1.contains("You are in forest"));
+    String response2 = server.handleCommand("player a: get key");
+    assertTrue(response2.contains("You picked up a key"));
+    String response3 = server.handleCommand("player a: goto cabin");
+    assertTrue(response3.contains("You are in cabin"));
+    String response4 = server.handleCommand("player a: open trapdoor with the key");
+    assertTrue(response4.contains("unlock the trapdoor"));
   }
 
 }

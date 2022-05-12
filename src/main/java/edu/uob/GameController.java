@@ -1,6 +1,8 @@
 package edu.uob;
 
 import edu.uob.entity.Artefact;
+import edu.uob.entity.Character;
+import edu.uob.entity.Furniture;
 import edu.uob.entity.Location;
 
 import java.util.*;
@@ -16,7 +18,7 @@ public class GameController {
         message = "";
         String[] names = command.split(":");
         if (names.length < 2) {
-            throw new GameException("Please enter name and command");
+            throw new GameException("Please enter a command");
         }
         setPlayer(names[0]);
         String[] tokens = names[1].split("\\s+");
@@ -111,11 +113,13 @@ public class GameController {
             throw new GameException("There is no path to go to " + locationName);
         }
         model.setCurrentLocation(locationName);
-        message += "You are in " + locationName + "\n";
+        message += "You are in " + locationName +": "
+                + model.getCurrentLocation().getDescription() +"\n";
         lookAction();
     }
 
     private void lookAction() {
+        //todo 这里面代码重复度高，说不定可以浓缩。
         HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
         message += "There are " + artefacts.size() + " artefacts in this location: \n";
         for (Artefact artefact: artefacts.values()) {
@@ -124,10 +128,25 @@ public class GameController {
             message += artefact.getDescription();
             message += "\n";
         }
+        HashMap<String, Furniture> furniture = model.getCurrentLocation().getFurniture();
+        message += "There are " + furniture.size() + " furniture in this location: \n";
+        for (Furniture furnitureItem: furniture.values()) {
+            message += furnitureItem.getName();
+            message += ": ";
+            message += furnitureItem.getDescription();
+            message += "\n";
+        }
+        HashMap<String, Character> characters = model.getCurrentLocation().getCharacters();
+        message += "There are " + characters.size() + " characters in this location: \n";
+        for (Character character: characters.values()) {
+            message += character.getName();
+            message += ": ";
+            message += character.getDescription();
+            message += "\n";
+        }
         Set<String> paths = model.getCurrentLocation().getPaths().keySet();
         message += "There are " + paths.size() + " paths: \n";
-        for (String pathName :
-                paths) {
+        for (String pathName : paths) {
             message += pathName;
             message += "\n";
         }

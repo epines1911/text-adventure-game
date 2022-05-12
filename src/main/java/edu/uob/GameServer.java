@@ -22,7 +22,7 @@ import org.xml.sax.SAXException;
 public final class GameServer {
 
     private static final char END_OF_TRANSMISSION = 4;
-    GameModel model;
+    private final GameModel model;
     private final GameController controller;
 
     public static void main(String[] args) throws IOException {
