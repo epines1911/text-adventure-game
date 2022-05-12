@@ -21,8 +21,9 @@ public class GameController {
             throw new GameException("Please enter a command");
         }
         setPlayer(names[0]);
-        String[] tokens = names[1].split("\\s+");
-        String trigger = tokens[1].toLowerCase();
+        String[] tokens = names[1].toLowerCase().split("\\s+");
+//        String trigger = tokens[1].toLowerCase();
+        String trigger = checkDoubleTrigger(names[1].toLowerCase());
         switch (trigger.toUpperCase()) {
             case "INV", "INVENTORY" -> inventoryAction();
             case "GET" -> getAction(tokens);
@@ -56,6 +57,33 @@ public class GameController {
         return aimString.matches("^[a-zA-Z]+[-\'\\sa-zA-Z]*");
     }
 
+    private String checkDoubleTrigger(String command) throws GameException {
+        HashSet<String> builtInTrigger = new HashSet<>();
+        builtInTrigger.add("inventory");
+        builtInTrigger.add("inv");
+        builtInTrigger.add("get");
+        builtInTrigger.add("drop");
+        builtInTrigger.add("goto");
+        builtInTrigger.add("look");
+        int counter = 0;
+        String aimTrigger = null;
+        for (String trigger : builtInTrigger) {
+            if (command.contains(trigger)) {
+                counter += 1;
+            }
+            if (counter > 1) {
+                throw new GameException("Find more than one built-in action to be executed.");
+            }
+            if (aimTrigger == null) {
+                aimTrigger = trigger;
+            }
+        }
+        if (counter == 0) {
+            throw new GameException("Cannot find an built-in action.");
+        }
+        return aimTrigger;
+    }
+
     private void inventoryAction() {
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         message += "There are " + inventory.size() + " artefacts in your inventory: \n";
@@ -74,6 +102,7 @@ public class GameController {
         tokens[1] = ""; // delete the string of 'trigger' in tokens
         HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
         Set<String> key = artefacts.keySet();
+        //todo 拆成小函数，从这开始
         String aimName = null;
         for (String token : tokens) {
             if (key.contains(token.toLowerCase())) {
@@ -87,6 +116,7 @@ public class GameController {
         if (aimName == null) {
             throw new GameException("Cannot find this artefact in the current location.");
         }
+        // TODO: 2022/5/12 拆成小函数，到这结束
 //        String name = tokens[2]; //todo delete
 //        if (!artefacts.containsKey(name)) {
 //            throw new GameException("There is no artefact named " + name + " in the current location");
