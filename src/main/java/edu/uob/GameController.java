@@ -57,9 +57,11 @@ public class GameController {
     private void inventoryAction() {
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         message += "There are " + inventory.size() + " artefacts in your inventory: \n";
-        Iterator<String> names = inventory.keySet().iterator();
-        while (names.hasNext()) {
-            message += names;
+        for (Artefact artefact :
+                inventory.values()) {
+            message += artefact.getName();
+            message += ": ";
+            message += artefact.getDescription();
             message += "\n";
         }
     }
@@ -76,7 +78,7 @@ public class GameController {
         Artefact newArtefact = artefacts.get(name);
         model.getCurrentPlayer().getInventory().put(name, newArtefact);
         artefacts.remove(name);
-        message = "You picked up " + name;
+        message = "You picked up a " + name;
     }
 
     private void dropAction(String[] tokens) throws GameException {
@@ -92,7 +94,7 @@ public class GameController {
         Artefact newArtefact = inventory.get(name);
         artefacts.put(name, newArtefact);
         model.getCurrentPlayer().getInventory().remove(name);
-        message = "You dropped " + name;
+        message = "You dropped a " + name;
     }
 
     private void gotoAction(String[] tokens) throws GameException {
@@ -109,7 +111,8 @@ public class GameController {
             throw new GameException("There is no path to go to " + locationName);
         }
         model.setCurrentLocation(locationName);
-        message = "Now you are at " + locationName;
+        message += "You are in " + locationName + "\n";
+        lookAction();
     }
 
     private void lookAction() {

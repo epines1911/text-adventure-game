@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.nio.file.Paths;
-import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -34,5 +33,15 @@ final class BasicCommandTests {
   }
 
   // Add more unit tests or integration tests here.
+
+  @Test
+  void testMultiplePlayers() {
+    server.handleCommand("player a: look");
+    server.handleCommand("player b: look");
+    //todo 我想在这里测一下，我成功加入了两个玩家，但我不知道怎么检测……
+//    assertTrue();
+//    assertTrue();
+//    assertTrue();
+  }
 
 }
