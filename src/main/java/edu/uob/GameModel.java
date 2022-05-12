@@ -15,7 +15,7 @@ public class GameModel {
     private Location birthPlace;
     private String currentPlayer;
     private Location storeroom;
-    private String currentLocation; //todo delete
+//    private String currentLocation; //todo delete
     private final HashMap<String, Location> locationsMap;
 
     public GameModel(Graph entities, NodeList actions) {
@@ -46,7 +46,7 @@ public class GameModel {
             locationsMap.put(name, location);
             if (id.equalsIgnoreCase("cluster001")) {
                 birthPlace = location;
-                currentLocation = name;
+//                currentLocation = name; //todo delete
             }
             if (id.equalsIgnoreCase("cluster999")) {
                 storeroom = location;
@@ -171,11 +171,21 @@ public class GameModel {
     }
 
     public void addPlayer(String playerName) {
-        Player newPlayer = new Player(playerName, "", birthPlace);
+        Player newPlayer = new Player(playerName, "A player", birthPlace);
         players.put(playerName, newPlayer);
     }
 
     public HashMap<String, Player> getPlayers() {
         return players;
+    }
+
+    public String getEntityType(String name) {
+        if (locationsMap.containsKey(name)) {
+            return "location";
+        } else if (name.equalsIgnoreCase("health")) {
+            return "health";
+        } else {
+            return storeroom.getEntityType(name);
+        }
     }
 }

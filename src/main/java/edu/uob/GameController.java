@@ -22,6 +22,9 @@ public class GameController {
         }
         setPlayer(names[0]);
         String[] tokens = names[1].toLowerCase().split("\\s+");
+        if (Arrays.asList(tokens).contains("and")) {
+            throw new GameException("Please enter only one entity in one command.");
+        }
         String trigger = checkDoubleTrigger(names[1].toLowerCase());
         switch (trigger.toUpperCase()) {
             case "INV", "INVENTORY" -> inventoryAction();
@@ -234,36 +237,115 @@ public class GameController {
     }
 
     private void executeAction(GameAction action) throws GameException {
+//        Location currentLocation = model.getCurrentPlayer().getLocation();//todo
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
-        HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
-        HashMap<String, Furniture> furniture = model.getCurrentPlayer().getLocation().getFurniture();
-        HashMap<String, Character> characters = model.getCurrentPlayer().getLocation().getCharacters();
-        HashMap<String, Location> paths = model.getCurrentPlayer().getLocation().getPaths();
-
-
-
+//        HashMap<String, Furniture> furniture = currentLocation.getFurniture();//todo
+//        HashMap<String, Character> characters = currentLocation.getCharacters();//todo
+//        HashMap<String, Location> paths = currentLocation.getPaths();//todo
+        Location storeroom = model.getStoreroom();
         ArrayList<String> consumedItems = action.getConsumed();
+        // check all the consumed entities are available,
+        // then move them to storeroom.
         for (String item : consumedItems) {
-            if (!inventory.containsKey(item)) {
-                throw new GameException(item + " is not in your inventory.");
+            if (item.equalsIgnoreCase("health")) {
+                model.getCurrentPlayer().healthLevelDown();
+            } else if (!checkInventory(item) && !checkArtefacts(item) && !checkFurniture(item)
+                    && !checkCharacters(item) && !checkPaths(item)) {
+                throw new GameException(item + " is not available.");
             }
         }
-        // Now I confirmed all the consumed entities are in the player's inventory, then execute this action
-        Location storeroom = model.getStoreroom();
-        // move consumed artefacts from inventory to storeroom
-        for (String item : consumedItems) {
-            Artefact consumed = inventory.get(item);
-            storeroom.addArtefact(consumed);
-            inventory.remove(item);
-        }
         ArrayList<String> producedItems = action.getProduced();
-        // move produced artefacts from storeroom to inventory
+        // move produced entities to current location
         for (String item : producedItems) {
-            Artefact produced = storeroom.getArtefacts().get(item);
-            inventory.put(item, produced);
-            storeroom.getArtefacts().remove(item);
+            produceEntity(item);
         }
         message = action.getNarration();
+    }
+    //todo 这几个check或许可以参照produceEntities给合并起来。
+    private boolean checkInventory(String name) {
+        HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
+        if (!inventory.containsKey(name)) {
+            return false;
+        }
+        Artefact consumed = inventory.get(name);
+        model.getStoreroom().addArtefact(consumed);
+        inventory.remove(name);
+        return true;
+    }
+
+    private boolean checkArtefacts(String name) {
+        HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
+        if (!artefacts.containsKey(name)) {
+            return false;
+        }
+        Artefact consumed = artefacts.get(name);
+        model.getStoreroom().addArtefact(consumed);
+        artefacts.remove(name);
+        return true;
+    }
+
+    private boolean checkFurniture(String name) {
+        HashMap<String, Furniture> furniture = model.getCurrentPlayer().getLocation().getFurniture();
+        if (!furniture.containsKey(name)) {
+            return false;
+        }
+        Furniture consumed = furniture.get(name);
+        model.getStoreroom().addFurniture(consumed);
+        furniture.remove(name);
+        return true;
+    }
+
+    private boolean checkCharacters(String name) {
+        HashMap<String, Character> character = model.getCurrentPlayer().getLocation().getCharacters();
+        if (!character.containsKey(name)) {
+            return false;
+        }
+        Character consumed = character.get(name);
+        model.getStoreroom().addCharacter(consumed);
+        character.remove(name);
+        return true;
+    }
+
+    private boolean checkPaths(String name) {
+        HashMap<String, Location> paths = model.getCurrentPlayer().getLocation().getPaths();
+        if (!paths.containsKey(name)) {
+            return false;
+        }
+        Location consumed = paths.get(name);//todo delete
+        paths.remove(name);
+        return true;
+    }
+
+    private void produceEntity(String name) {
+        Location currentLocation = model.getCurrentPlayer().getLocation();
+        Location storeroom = model.getStoreroom();
+        String type = model.getEntityType(name);
+        switch (type) {
+            case "artefact" -> {
+                Artefact entity = storeroom.getArtefacts().get(name);
+                currentLocation.addArtefact(entity);
+                storeroom.getArtefacts().remove(name);
+            }
+            case "furniture" -> {
+                Furniture entity = storeroom.getFurniture().get(name);
+                currentLocation.addFurniture(entity);
+                storeroom.getFurniture().remove(name);
+            }
+            case "character" -> {
+                Character entity = storeroom.getCharacters().get(name);
+                currentLocation.addCharacter(entity);
+                storeroom.getCharacters().remove(name);
+            }
+            case "location" -> {
+                Location entity = model.getLocationsMap().get(name);
+                currentLocation.addPaths(entity);
+            }
+            default -> {
+                if (name.equalsIgnoreCase("health")) {
+                    model.getCurrentPlayer().healthLevelUp();
+                }
+            }
+        }
     }
 
     public String getMessage() {

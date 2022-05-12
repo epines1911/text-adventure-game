@@ -5,10 +5,10 @@ import edu.uob.GameEntity;
 import java.util.HashMap;
 
 public class Location extends GameEntity {
-    private HashMap<String, Location> paths;
-    private HashMap<String, Artefact> artefacts;
-    private HashMap<String, Furniture> furniture;
-    private HashMap<String, Character> characters;
+    private final HashMap<String, Location> paths;
+    private final HashMap<String, Artefact> artefacts;
+    private final HashMap<String, Furniture> furniture;
+    private final HashMap<String, Character> characters;
 
     public Location(String name, String description) {
         super(name, description);
@@ -48,5 +48,17 @@ public class Location extends GameEntity {
 
     public void addPaths(Location entity) {
         paths.put(entity.getName(), entity);
+    }
+
+    public String getEntityType(String name) {
+        if (artefacts.containsKey(name)) {
+            return "artefact";
+        } else if (furniture.containsKey(name)) {
+            return "furniture";
+        } else if (characters.containsKey(name)) {
+            return "character";
+        } else {
+            return "";
+        }
     }
 }
