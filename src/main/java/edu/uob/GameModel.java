@@ -10,15 +10,18 @@ import org.w3c.dom.NodeList;
 import java.util.*;
 
 public class GameModel {
-    private final TreeMap<String, HashSet<GameAction>> actionsMap = new TreeMap<String, HashSet<GameAction>>();
-    private ArrayList<Player> players;
+    private final TreeMap<String, HashSet<GameAction>> actionsMap;
+    private HashMap<String, Player> players;
     private Location birthPlace;
-    private Player currentPlayer;//todo 要不要只记current player的名字，然后就像current location那样现场查找
+    private String currentPlayer;
     private Location storeroom;
     private String currentLocation;
-    private final HashMap<String, Location> locationsMap = new HashMap<String, Location>();
+    private final HashMap<String, Location> locationsMap;
 
     public GameModel(Graph entities, NodeList actions) {
+        actionsMap = new TreeMap<>();
+        locationsMap = new HashMap<>();
+        players = new HashMap<>();
         setGameEntities(entities);
         setGameAction(actions);
     }
@@ -144,7 +147,7 @@ public class GameModel {
     }
 
     public Player getCurrentPlayer() {
-        return currentPlayer;
+        return players.get(currentPlayer);
     }
 
     public Location getStoreroom() {
@@ -161,5 +164,18 @@ public class GameModel {
 
     public void setCurrentLocation(String locationName) {
         currentLocation = locationName;
+    }
+
+    public void setCurrentPlayer(String playerName) {
+        currentPlayer = playerName;
+    }
+
+    public void addPlayer(String playerName) {
+        Player newPlayer = new Player(playerName, "");
+        players.put(playerName, newPlayer);
+    }
+
+    public HashMap<String, Player> getPlayers() {
+        return players;
     }
 }

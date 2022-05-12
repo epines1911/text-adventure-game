@@ -89,10 +89,9 @@ public final class GameServer {
     */
     public String handleCommand(String command) {
         // TODO implement your server logic here
-        String[] tokens = command.split("\\s+");
         if (controller != null) {
             try {
-                controller.commandParser(tokens);
+                controller.commandParser(command);
             } catch (GameException e) {
                 e.printStackTrace();
             }

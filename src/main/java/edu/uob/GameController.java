@@ -12,12 +12,15 @@ public class GameController {
         model = gameModel;
     }
 
-    public void commandParser(String[] tokens) throws GameException {
+    public void commandParser(String command) throws GameException {
         message = "";
-        String trigger = tokens[0].toLowerCase();
-        if (!model.getActionsMap().containsKey(trigger)) {
-            throw new GameException("Cannot find " + trigger + ", please check this word.");
+        String[] names = command.split(":");
+        if (names.length < 2) {
+            throw new GameException("Please enter name and command");
         }
+        setPlayer(names[0]);
+        String[] tokens = names[1].split("\\s+");
+        String trigger = tokens[1].toLowerCase();
         switch (trigger.toUpperCase()) {
             case "INV", "INVENTORY" -> inventoryAction();
             case "GET" -> getAction(tokens);
@@ -26,6 +29,29 @@ public class GameController {
             case "LOOK" -> lookAction();
             default -> normalActionParser(trigger, tokens);
         }
+    }
+
+    private void setPlayer(String name) throws GameException {
+        if (!isValidName(name)) {
+            throw new GameException("Player's name is invalid");
+        }
+        if (!model.getPlayers().containsKey(name)) {
+            model.addPlayer(name);
+            model.setCurrentPlayer(name);
+        }
+        if (!model.getCurrentPlayer().getName().equalsIgnoreCase(name)) {
+            model.setCurrentPlayer(name);
+        }
+    }
+
+    public boolean isValidName(String aimString) {
+        if (aimString.length() < 1) {return false;}
+        // ^[a-zA-Z]+ means the aimString should start with an english character,
+        // and the uppercase is ignored.
+        // [-'\sa-zA-Z]* means after the first character,
+        // there would be 0 or more english characters or symbols,
+        // including space, "-", and "'".
+        return aimString.matches("^[a-zA-Z]+[-\'\\sa-zA-Z]*");
     }
 
     private void inventoryAction() {
@@ -39,10 +65,10 @@ public class GameController {
     }
 
     private void getAction(String[] tokens) throws GameException {
-        if (tokens.length < 2) {
+        if (tokens.length < 3) {
             throw new GameException("Please enter the item's name. e.g: get name");
         }
-        String name = tokens[1]; //todo 如果允许一次性捡多个东西的话就挨个匹配tokens里面的string
+        String name = tokens[2]; //todo 如果允许一次性捡多个东西的话就挨个匹配tokens里面的string
         HashMap<String, Artefact> artefacts = model.getCurrentLocation().getArtefacts();
         if (!artefacts.containsKey(name)) {
             throw new GameException("There is no artefact named " + name + " in the current location");
@@ -54,10 +80,10 @@ public class GameController {
     }
 
     private void dropAction(String[] tokens) throws GameException {
-        if (tokens.length < 2) {
+        if (tokens.length < 3) {
             throw new GameException("Please enter the item's name. e.g: drop name");
         }
-        String name = tokens[1]; //todo 如果允许一次性扔多个东西的话就挨个匹配tokens里面的string
+        String name = tokens[2]; //todo 如果允许一次性扔多个东西的话就挨个匹配tokens里面的string
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         if (!inventory.containsKey(name)) {
             throw new GameException("There is no artefact named " + name + " in the inventory");
@@ -70,10 +96,10 @@ public class GameController {
     }
 
     private void gotoAction(String[] tokens) throws GameException {
-        if (tokens.length < 2) {
+        if (tokens.length < 3) {
             throw new GameException("Please enter the location's name. e.g: goto name");
         }
-        String locationName = tokens[1];
+        String locationName = tokens[2];
         //todo 为了减少complexity把两个错误项合并了。可能信息不够准确。不知道要不要改回来。
 //        if (!model.getLocationsMap().containsKey(locationName)) {
 //            throw new GameException("There is no location named " + locationName);
@@ -105,6 +131,9 @@ public class GameController {
     }
 
     private void normalActionParser(String trigger, String[] tokens) throws GameException {
+        if (!model.getActionsMap().containsKey(trigger)) {
+            throw new GameException("Cannot find " + trigger + ", please check this word.");
+        }
         HashSet<GameAction> actions = model.getActionsMap().get(trigger);
         // find which action should be executed
         GameAction aimAction = null;
