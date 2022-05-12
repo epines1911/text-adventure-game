@@ -56,4 +56,17 @@ final class BasicCommandTests {
     assertTrue(response4.contains("unlock the trapdoor"));
   }
 
+  @Test
+  void testMultipleInvalidActions() {
+    String response1 = server.handleCommand("player a: get potion and goto forest");
+    assertTrue(response1.contains("ERROR"));
+//    String response2 = server.handleCommand("player a: get key and ");
+//    assertTrue(response2.contains("You picked up a key"));
+//    String response3 = server.handleCommand("player a: goto cabin");
+//    assertTrue(response3.contains("You are in cabin"));
+//    String response4 = server.handleCommand("player a: open trapdoor with the key");
+//    assertTrue(response4.contains("unlock the trapdoor"));
+  }
+
+  //todo 既然转了lowercase，那就测几个大小写混合的command。
 }
