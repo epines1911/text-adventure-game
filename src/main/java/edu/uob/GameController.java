@@ -1,9 +1,7 @@
 package edu.uob;
 
-import edu.uob.entity.Artefact;
+import edu.uob.entity.*;
 import edu.uob.entity.Character;
-import edu.uob.entity.Furniture;
-import edu.uob.entity.Location;
 
 import java.util.*;
 
@@ -27,12 +25,12 @@ public class GameController {
         }
         String trigger = checkDoubleTrigger(names[1].toLowerCase());
         switch (trigger.toUpperCase()) {
-            case "INV", "INVENTORY" -> inventoryAction();
+            case "INV", "INVENTORY" -> inventoryAction(tokens);
             case "GET" -> getAction(tokens);
             case "DROP" -> dropAction(tokens);
             case "GOTO" -> gotoAction(tokens);
             case "LOOK" -> lookAction();
-            case "HEALTH" -> healthAction();
+            case "HEALTH" -> healthAction(tokens);
             default -> normalActionParser(names[1].toLowerCase(), tokens);
         }
     }
@@ -83,7 +81,11 @@ public class GameController {
         return aimTrigger;
     }
 
-    private void inventoryAction() {
+    private void inventoryAction(String[] tokens) throws GameException {
+        if (tokens.length > 2) {
+            throw new GameException("If you want to check your inventory, " +
+                    "please enter: 'inv' or 'inventory'.");
+        }
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         message += "There are " + inventory.size() + " artefacts in your inventory: \n";
         for (Artefact artefact : inventory.values()) {
@@ -95,8 +97,8 @@ public class GameController {
     }
 
     private void getAction(String[] tokens) throws GameException {
-        if (tokens.length < 3) {
-            throw new GameException("Please enter the item's name. e.g: get name");
+        if (tokens.length < 3 || tokens.length > 4) {
+            throw new GameException("Please enter one item's name. e.g: get name");
         }
         tokens[Arrays.asList(tokens).indexOf("get")] = "";// delete the string of 'trigger' in tokens
         HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
@@ -126,16 +128,15 @@ public class GameController {
     }
 
     private void dropAction(String[] tokens) throws GameException {
-        if (tokens.length < 3) {
-            throw new GameException("Please enter the item's name. e.g: drop name");
+        if (tokens.length < 3 || tokens.length > 4) {
+            throw new GameException("Please enter one item's name. e.g: drop name");
         }
         tokens[Arrays.asList(tokens).indexOf("drop")] = "";// delete the string of 'trigger' in tokens
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         Set<String> key = inventory.keySet();
         String aimName = checkDoubleSubjects(tokens, key);
-        HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
         Artefact newArtefact = inventory.get(aimName);
-        artefacts.put(aimName, newArtefact);
+        model.getCurrentPlayer().getLocation().addArtefact(newArtefact);
         model.getCurrentPlayer().getInventory().remove(aimName);
         message = "You dropped a " + aimName;
     }
@@ -154,31 +155,27 @@ public class GameController {
     }
 
     private void lookAction() {
-        //todo 这里面代码重复度高，说不定可以浓缩。
         HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
         message += "There are " + artefacts.size() + " artefacts in this location: \n";
         for (Artefact artefact: artefacts.values()) {
-            message += artefact.getName();
-            message += ": ";
-            message += artefact.getDescription();
-            message += "\n";
+            message += lookEntityInfo(artefact);
         }
         HashMap<String, Furniture> furniture = model.getCurrentPlayer().getLocation().getFurniture();
         message += "There are " + furniture.size() + " furniture in this location: \n";
         for (Furniture furnitureItem: furniture.values()) {
-            message += furnitureItem.getName();
-            message += ": ";
-            message += furnitureItem.getDescription();
-            message += "\n";
+            message += lookEntityInfo(furnitureItem);
         }
         HashMap<String, Character> characters = model.getCurrentPlayer().getLocation().getCharacters();
         message += "There are " + characters.size() + " characters in this location: \n";
         for (Character character: characters.values()) {
-            message += character.getName();
-            message += ": ";
-            message += character.getDescription();
-            message += "\n";
+            message += lookEntityInfo(character);
         }
+        HashMap<String, Player> players = model.getPlayers();
+        message += "There are " + players.size() + " players in this location: \n";
+        for (Player player: players.values()) {
+            message += lookEntityInfo(player);
+        }
+
         Set<String> paths = model.getCurrentPlayer().getLocation().getPaths().keySet();
         message += "There are " + paths.size() + " paths: \n";
         for (String pathName : paths) {
@@ -187,7 +184,20 @@ public class GameController {
         }
     }
 
-    private void healthAction() {
+    private String lookEntityInfo(GameEntity entity) {
+        String information = "";
+        information += entity.getName();
+        information += ": ";
+        information += entity.getDescription();
+        information += "\n";
+        return information;
+    }
+
+    private void healthAction(String[] tokens) throws GameException {
+        if (tokens.length > 2) {
+            throw new GameException("If you want to check your health, " +
+                    "please enter: 'health'.");
+        }
         message = "Your health is " + model.getCurrentPlayer().getHealthLevel();
     }
 
@@ -237,12 +247,7 @@ public class GameController {
     }
 
     private void executeAction(GameAction action) throws GameException {
-//        Location currentLocation = model.getCurrentPlayer().getLocation();//todo
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
-//        HashMap<String, Furniture> furniture = currentLocation.getFurniture();//todo
-//        HashMap<String, Character> characters = currentLocation.getCharacters();//todo
-//        HashMap<String, Location> paths = currentLocation.getPaths();//todo
-        Location storeroom = model.getStoreroom();
         ArrayList<String> consumedItems = action.getConsumed();
         // check all the consumed entities are available,
         // then move them to storeroom.
@@ -254,12 +259,16 @@ public class GameController {
                 throw new GameException(item + " is not available.");
             }
         }
-        ArrayList<String> producedItems = action.getProduced();
-        // move produced entities to current location
-        for (String item : producedItems) {
-            produceEntity(item);
+        if (model.getCurrentPlayer().isDeath()) {
+            restartGame();
+        } else {
+            ArrayList<String> producedItems = action.getProduced();
+            // move produced entities to current location
+            for (String item : producedItems) {
+                produceEntity(item);
+            }
+            message = action.getNarration();
         }
-        message = action.getNarration();
     }
     //todo 这几个check或许可以参照produceEntities给合并起来。
     private boolean checkInventory(String name) {
@@ -346,6 +355,20 @@ public class GameController {
                 }
             }
         }
+    }
+
+    private void restartGame() {
+        HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
+        Location currentLocation = model.getCurrentPlayer().getLocation();
+        for (Artefact artefact :
+                inventory.values()) {
+            currentLocation.addArtefact(artefact);
+        }
+        inventory.clear();
+        model.getCurrentPlayer().setFullHealth();
+        model.getCurrentPlayer().setLocation(model.getBirthPlace());
+        message = "You died and lost all the artefacts in your inventory. When you open your eyes, " +
+                "you found you are in " + model.getCurrentPlayer().getLocation().getName();
     }
 
     public String getMessage() {

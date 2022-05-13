@@ -11,7 +11,7 @@ import java.util.*;
 
 public class GameModel {
     private final TreeMap<String, HashSet<GameAction>> actionsMap;
-    private HashMap<String, Player> players;
+    private final HashMap<String, Player> players;
     private Location birthPlace;
     private String currentPlayer;
     private Location storeroom;
@@ -61,17 +61,19 @@ public class GameModel {
             // todo 有没有别的办法？
             String id = attribute.getId().getId();
             if (attribute.getNodes(true).size() > 0) {
-                String attributeName = attribute.getNodes(true).get(0).getId().getId(); // the id of nodes[0] should be 'carbin'
-                String attributeDescription = attribute.getNodes(true).get(0).getAttribute("description");
-                if (id.equalsIgnoreCase("characters")) {
-                    Character character = new Character(attributeName, attributeDescription);
-                    location.addCharacter(character);
-                } else if (id.equalsIgnoreCase("furniture")) {
-                    Furniture furniture = new Furniture(attributeName, attributeDescription);
-                    location.addFurniture(furniture);
-                } else if (id.equalsIgnoreCase("artefacts")) {
-                    Artefact artefact = new Artefact(attributeName, attributeDescription);
-                    location.addArtefact(artefact);
+                for (int i = 0; i < attribute.getNodes(true).size(); i++) {
+                    String attributeName = attribute.getNodes(true).get(i).getId().getId(); // the id of nodes[0] should be 'carbin'
+                    String attributeDescription = attribute.getNodes(true).get(i).getAttribute("description");
+                    if (id.equalsIgnoreCase("characters")) {
+                        Character character = new Character(attributeName, attributeDescription);
+                        location.addCharacter(character);
+                    } else if (id.equalsIgnoreCase("furniture")) {
+                        Furniture furniture = new Furniture(attributeName, attributeDescription);
+                        location.addFurniture(furniture);
+                    } else if (id.equalsIgnoreCase("artefacts")) {
+                        Artefact artefact = new Artefact(attributeName, attributeDescription);
+                        location.addArtefact(artefact);
+                    }
                 }
             }
         }
@@ -185,7 +187,7 @@ public class GameModel {
         } else if (name.equalsIgnoreCase("health")) {
             return "health";
         } else {
-            return storeroom.getEntityType(name);
+            return storeroom.getEntityType(name); //todo 要不要加入别的地点的匹配
         }
     }
 }
