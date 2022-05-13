@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ExtendedCommandTests {
@@ -22,7 +23,9 @@ final class ExtendedCommandTests {
     @Test
     void testLookingAroundStartLocation() {
         String response = server.handleCommand("player a: look").toLowerCase();
-        assertTrue(response.contains("empty room"), "Did not see description of room in response to look");
+        assertTrue(response.contains("log cabin"), "Did not see description of artifacts in response to look");
+        assertTrue(response.contains("3 artefacts"), "Did not see description of room in response to look");
+        assertTrue(response.contains("silver coin"), "Did not see description of artifacts in response to look");
         assertTrue(response.contains("magic potion"), "Did not see description of artifacts in response to look");
         assertTrue(response.contains("wooden trapdoor"), "Did not see description of furniture in response to look");
     }
@@ -30,38 +33,84 @@ final class ExtendedCommandTests {
     // Add more unit tests or integration tests here.
 
     @Test
-    void testMultiplePlayers() {
-        server.handleCommand("player a: look");
-        server.handleCommand("player b: look");
-        //todo 我想在这里测一下，我成功加入了两个玩家，但我不知道怎么检测……debug里确实是两个玩家了。
-//    assertTrue();
-//    assertTrue();
-//    assertTrue();
+    void testLookOtherPlayers() {
+        server.handleCommand("Kun: get potion");
+        String response = server.handleCommand("Rui: look");
+        assertTrue(response.contains("2 players"));
+        assertTrue(response.contains("Kun: A player"));
     }
 
     @Test
     void testMultipleActions() {
-        String response1 = server.handleCommand("player a: goto forest");
-        assertTrue(response1.contains("You are in forest"));
-        String response2 = server.handleCommand("player a: get key");
-        assertTrue(response2.contains("You picked up a key"));
-        String response3 = server.handleCommand("player a: goto cabin");
-        assertTrue(response3.contains("You are in cabin"));
-        String response4 = server.handleCommand("player a: open trapdoor with the key");
-        assertTrue(response4.contains("unlock the trapdoor"));
+        server.handleCommand("player a: get potion");
+        server.handleCommand("player a: get axe");
+        server.handleCommand("player a: get coin");
+        String response = server.handleCommand("player a: inv");
+        assertTrue(response.contains("potion"));
+        assertTrue(response.contains("axe"));
+        assertTrue(response.contains("coin"));
+        // go to forest
+        server.handleCommand("player a: goto forest");
+        response = server.handleCommand("player a: chop tree with axe"); // it's valid
+//        response = server.handleCommand("player a: cut tree"); // it's valid
+//        response = server.handleCommand("player a: cutdown with axe"); // it's valid
+//        response = server.handleCommand("player a: cut down with axe"); // it's valid
+        assertTrue(response.contains("cut down the tree"));
+        response = server.handleCommand("player a: look");
+        assertFalse(response.contains("tree"));
+        server.handleCommand("player a: get key");
+        server.handleCommand("player a: get log");
+        response = server.handleCommand("player a: inv");
+        assertTrue(response.contains("log"));
+        // go to cellar
+        server.handleCommand("player a: goto cabin");
+        server.handleCommand("player a: open trapdoor"); // it is valid
+        server.handleCommand("player a: goto cellar");
+        server.handleCommand("player a: hit elf");
+        server.handleCommand("player a: hit elf");
+        server.handleCommand("player a: drink potion"); // health should be 2
+        response = server.handleCommand("player a: health");
+        assertTrue(response.contains("health is 2"));
+        server.handleCommand("player a: pay elf coin");
+        response = server.handleCommand("player a: look");
+        assertTrue(response.contains("shovel"));
+        response = server.handleCommand("player a: inv");
+        assertFalse(response.contains("potion"));
+        assertFalse(response.contains("key"));
+        // go to riverbank
+        server.handleCommand("player a: goto cabin");
+        server.handleCommand("player a: goto forest");
+        server.handleCommand("player a: goto riverbank");
+        server.handleCommand("player a: blow horn");
+//        server.handleCommand("player a: bridge the river with the log"); // it's valid
+        server.handleCommand("player a: bridge the river"); // it's valid
+//        server.handleCommand("player a: bridge with the log"); // it's valid
+        response = server.handleCommand("player a: look");
+        assertTrue(response.contains("lumberjack"));
+        assertTrue(response.contains("clearing"));
+        // goto clearing
+        server.handleCommand("player a: goto clearing");
+//        server.handleCommand("player a: dig ground with shovel"); // it's valid
+//        server.handleCommand("player a: dig ground"); // it's valid
+        response = server.handleCommand("player a: dig with shovel"); // it's valid
+        assertTrue(response.contains("dig into the soft ground and unearth a pot of gold"));
+        response = server.handleCommand("player a: look");
+        assertTrue(response.contains("gold"));
+        assertTrue(response.contains("hole"));
+        assertFalse(response.contains("looks like the soil has been recently disturbed"));
     }
 
-    @Test
-    void testMultipleInvalidActions() {
-        String response1 = server.handleCommand("player a: get potion and goto forest");
-        assertTrue(response1.contains("ERROR"));
-//    String response2 = server.handleCommand("player a: get key and ");
-//    assertTrue(response2.contains("You picked up a key"));
-//    String response3 = server.handleCommand("player a: goto cabin");
-//    assertTrue(response3.contains("You are in cabin"));
-//    String response4 = server.handleCommand("player a: open trapdoor with the key");
-//    assertTrue(response4.contains("unlock the trapdoor"));
-    }
+//    @Test
+//    void testMultipleInvalidActions() {
+//        String response1 = server.handleCommand("player a: get potion and goto forest");
+//        assertTrue(response1.contains("ERROR"));
+////    String response2 = server.handleCommand("player a: get key and ");
+////    assertTrue(response2.contains("You picked up a key"));
+////    String response3 = server.handleCommand("player a: goto cabin");
+////    assertTrue(response3.contains("You are in cabin"));
+////    String response4 = server.handleCommand("player a: open trapdoor with the key");
+////    assertTrue(response4.contains("unlock the trapdoor"));
+//    }
 
     //todo 既然转了lowercase，那就测几个大小写混合的command。
 }

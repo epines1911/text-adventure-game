@@ -149,12 +149,12 @@ public class GameController {
         Set<String> key = model.getCurrentPlayer().getLocation().getPaths().keySet();
         String aimName = checkDoubleSubjects(tokens, key);
         model.getCurrentPlayer().setLocation(model.getLocation(aimName));
-            message += "You are in " + aimName +": "
-                + model.getCurrentPlayer().getLocation().getDescription() +"\n";
         lookAction();
     }
 
     private void lookAction() {
+        message += "You are in " + model.getCurrentPlayer().getLocation().getName() +": "
+                + model.getCurrentPlayer().getLocation().getDescription() +"\n";
         HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
         message += "There are " + artefacts.size() + " artefacts in this location: \n";
         for (Artefact artefact: artefacts.values()) {
@@ -175,7 +175,6 @@ public class GameController {
         for (Player player: players.values()) {
             message += lookEntityInfo(player);
         }
-
         Set<String> paths = model.getCurrentPlayer().getLocation().getPaths().keySet();
         message += "There are " + paths.size() + " paths: \n";
         for (String pathName : paths) {

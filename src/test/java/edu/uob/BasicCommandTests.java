@@ -2,6 +2,9 @@ package edu.uob;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
 import java.io.File;
 import java.nio.file.Paths;
 
@@ -35,38 +38,81 @@ final class BasicCommandTests {
   // Add more unit tests or integration tests here.
 
   @Test
-  void testMultiplePlayers() {
-    server.handleCommand("player a: look");
-    server.handleCommand("player b: look");
-    //todo 我想在这里测一下，我成功加入了两个玩家，但我不知道怎么检测……debug里确实是两个玩家了。
-//    assertTrue();
-//    assertTrue();
-//    assertTrue();
-  }
-
-  @Test
   void testMultipleActions() {
+    String response0 = server.handleCommand("player a: get potion");
+    assertTrue(response0.contains("You picked up a potion"));
     String response1 = server.handleCommand("player a: goto forest");
     assertTrue(response1.contains("You are in forest"));
     String response2 = server.handleCommand("player a: get key");
     assertTrue(response2.contains("You picked up a key"));
     String response3 = server.handleCommand("player a: goto cabin");
     assertTrue(response3.contains("You are in cabin"));
-    String response4 = server.handleCommand("player a: open trapdoor with the key");
+//    String response4 = server.handleCommand("player a: open trapdoor with the key"); // it is valid
+    String response4 = server.handleCommand("player a: unlock with key"); // it is valid
+//    String response4 = server.handleCommand("player a: open trapdoor"); // it is valid
     assertTrue(response4.contains("unlock the trapdoor"));
+    String response5 = server.handleCommand("player a: goto cellar");
+    assertTrue(response5.contains("You are in cellar"));
+    String response6 = server.handleCommand("player a: hit elf");
+    assertTrue(response6.contains("attack the elf"));
+    String response7 = server.handleCommand("player a: health");
+    assertTrue(response7.contains("Your health is 2")); // the health should be 2
+    String response8 = server.handleCommand("player a: drink potion");
+    assertTrue(response8.contains("your health improves"));
+    String response9 = server.handleCommand("player a: health");
+    assertTrue(response9.contains("Your health is 3")); // the health should be 3
   }
 
-  @Test
-  void testMultipleInvalidActions() {
-    String response1 = server.handleCommand("player a: get potion and goto forest");
-    assertTrue(response1.contains("ERROR"));
-//    String response2 = server.handleCommand("player a: get key and ");
-//    assertTrue(response2.contains("You picked up a key"));
-//    String response3 = server.handleCommand("player a: goto cabin");
-//    assertTrue(response3.contains("You are in cabin"));
-//    String response4 = server.handleCommand("player a: open trapdoor with the key");
-//    assertTrue(response4.contains("unlock the trapdoor"));
+  @ParameterizedTest
+  @ValueSource(strings = {
+          "player a: get potion and goto forest",
+          "player a: drink attack potion"}) //todo 第三个目前不会判定错误，不行就删了。, "player a: get potion forest"
+  void testMultipleInvalidActions(String command) {
+    String response = server.handleCommand(command);
+    assertTrue(response.contains("ERROR"));
   }
 
   //todo 既然转了lowercase，那就测几个大小写混合的command。
+
+  //todo 测cut down tree
+
+  //todo 用掉之后再用，false。
+
+  @Test
+  void testLookOtherPlayers() {
+    server.handleCommand("Kun: get potion");
+    String response = server.handleCommand("Rui: look");
+    assertTrue(response.contains("2 players"));
+    assertTrue(response.contains("Kun: A player"));
+  }
+
+  @Test
+  void testRestartGame() {
+    server.handleCommand("player a: get potion");
+    server.handleCommand("player a: goto forest");
+    server.handleCommand("player a: get key");
+    server.handleCommand("player a: goto cabin");
+//    server.handleCommand("player a: open trapdoor with the key"); // it is valid
+//    server.handleCommand("player a: unlock with key"); // it is valid
+    server.handleCommand("player a: open trapdoor"); // it is valid
+    server.handleCommand("player a: goto cellar");
+    server.handleCommand("player a: hit elf");
+    String response1 = server.handleCommand("player a: health");
+    assertTrue(response1.contains("Your health is 2")); // the health should be 2
+    server.handleCommand("player a: hit elf");
+    String response2 = server.handleCommand("player a: health");
+    assertTrue(response2.contains("Your health is 1")); // the health should be 1
+    String response3 = server.handleCommand("player a: hit elf");
+    assertTrue(response3.contains("You died and lost all the artefacts")); // the health should be 0
+    server.handleCommand("player a: goto cellar");
+    String response4 = server.handleCommand("player a: look");
+    assertTrue(response4.contains("potion"));
+  }
+
+//  @Test //todo 修改了dot文件之后才有效的测试。记得挪到extends之后删掉
+//  void testIgnoreGet() {
+//    server.handleCommand("player a: get key");
+//    String response = server.handleCommand("player a: open trapdoor with the key"); // it is valid
+//    assertTrue(response.contains("unlock the trapdoor"));
+//  }
 }
