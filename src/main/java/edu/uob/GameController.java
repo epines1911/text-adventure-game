@@ -25,7 +25,7 @@ public class GameController {
         if (Arrays.asList(tokens).contains("and")) {
             throw new GameException("Please enter only one entity in one command.");
         }
-        String trigger = checkDoubleTrigger(names[1].toLowerCase());
+        String trigger = checkDoubleTrigger(tokens);
         switch (trigger.toUpperCase()) {
             case "INV", "INVENTORY" -> inventoryAction(tokens);
             case "GET" -> getAction(tokens);
@@ -60,7 +60,7 @@ public class GameController {
         return aimString.matches("^[a-zA-Z]+[-\'\\sa-zA-Z]*");
     }
 
-    private String checkDoubleTrigger(String command) throws GameException {
+    private String checkDoubleTrigger(String[] tokens) throws GameException {
         HashSet<String> builtInTrigger = new HashSet<>();
         builtInTrigger.add("inventory");
         builtInTrigger.add("inv");
@@ -72,12 +72,14 @@ public class GameController {
         int counter = 0;
         String aimTrigger = "";
         for (String trigger : builtInTrigger) {
-            if (command.contains(trigger)) {
-                counter += 1;
-                if (counter > 1) {
-                    throw new GameException("Find more than one built-in action to be executed.");
+            for (String token : tokens) {
+                if (token.equalsIgnoreCase(trigger) && token.length() > 0) {
+                    counter += 1;
+                    if (counter > 1) {
+                        throw new GameException("Find more than one built-in action to be executed.");
+                    }
+                    aimTrigger = trigger;
                 }
-                aimTrigger = trigger;
             }
         }
         return aimTrigger;
@@ -234,7 +236,7 @@ public class GameController {
     private void checkSubjects(HashSet<GameAction> actions, String command) throws GameException {
         GameAction aimAction = null;
         for (GameAction action: actions) {
-            ArrayList<String> subjects = action.getSubjects();
+            HashSet<String> subjects = action.getSubjects();
             int counter = 0;
             // check if the command contains at least one required subject
             for (String subject : subjects) {
@@ -257,7 +259,7 @@ public class GameController {
     }
 
     private void executeAction(GameAction action) throws GameException {
-        ArrayList<String> consumedItems = action.getConsumed();
+        HashSet<String> consumedItems = action.getConsumed();
 // check if all the consumed entities are available, then reduce health value or move them to storeroom.
         for (String item : consumedItems) {
             if (item.equalsIgnoreCase("health")) {
@@ -271,7 +273,7 @@ public class GameController {
         if (model.getCurrentPlayer().isDeath()) {
             restartGame();
         } else {
-            ArrayList<String> producedItems = action.getProduced();
+            HashSet<String> producedItems = action.getProduced();
             // produce new entities and add them to current location
             for (String item : producedItems) {
                 produceEntity(item);

@@ -1,19 +1,19 @@
 package edu.uob;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class GameAction
 {
-    //todo 其实里面的内容应该是能保证unique的，arraylist并没有unique的机制，是否要考虑换个data structure
-    private final ArrayList<String> subjects;
-    private final ArrayList<String> consumed;
-    private final ArrayList<String> produced;
+    private final HashSet<String> subjects;
+    private final HashSet<String> consumed;
+    private final HashSet<String> produced;
     private String narration;
 
     public GameAction() {
-        subjects = new ArrayList<>();
-        consumed = new ArrayList<>();
-        produced = new ArrayList<>();
+        subjects = new HashSet<>();
+        consumed = new HashSet<>();
+        produced = new HashSet<>();
     }
 
     public void setNarration(String newNarration) {
@@ -24,15 +24,15 @@ public class GameAction
         return narration;
     }
 
-    public ArrayList<String> getConsumed() {
+    public HashSet<String> getConsumed() {
         return consumed;
     }
 
-    public ArrayList<String> getProduced() {
+    public HashSet<String> getProduced() {
         return produced;
     }
 
-    public ArrayList<String> getSubjects() {
+    public HashSet<String> getSubjects() {
         return subjects;
     }
 

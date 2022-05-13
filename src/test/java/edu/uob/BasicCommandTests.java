@@ -38,6 +38,17 @@ final class BasicCommandTests {
 
   // Add more unit tests or integration tests here.
 
+  @ParameterizedTest
+  @ValueSource(strings = {
+          " alice",
+          "adl dlf*af",
+          "1lksjf a",
+          "aflj*% la"})
+  void testInvalidPlayerName(String name) {
+    String response = server.handleCommand(name + ": inventory");
+    assertTrue(response.contains("ERROR"));
+  }
+
   @Test
   void testInvAction() {
     String response = server.handleCommand("player a: inventory");
