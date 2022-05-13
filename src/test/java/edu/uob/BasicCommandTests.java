@@ -108,11 +108,4 @@ final class BasicCommandTests {
     String response4 = server.handleCommand("player a: look");
     assertTrue(response4.contains("potion"));
   }
-
-//  @Test //todo 修改了dot文件之后才有效的测试。记得挪到extends之后删掉
-//  void testIgnoreGet() {
-//    server.handleCommand("player a: get key");
-//    String response = server.handleCommand("player a: open trapdoor with the key"); // it is valid
-//    assertTrue(response.contains("unlock the trapdoor"));
-//  }
 }

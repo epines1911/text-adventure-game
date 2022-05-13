@@ -15,7 +15,6 @@ public class GameModel {
     private Location birthPlace;
     private String currentPlayer;
     private Location storeroom;
-//    private String currentLocation; //todo delete
     private final HashMap<String, Location> locationsMap;
 
     public GameModel(Graph entities, NodeList actions) {
@@ -28,7 +27,7 @@ public class GameModel {
 
     private void setGameEntities(Graph entities) {
         ArrayList<Graph> sections = entities.getSubgraphs();
-        // The locations will always be in the first subgraph
+        // The locations will always be in the first subgraph, so the index is 0
         ArrayList<Graph> locations = sections.get(0).getSubgraphs();
         setGameLocations(locations);
         ArrayList<Edge> paths = sections.get(1).getEdges();
@@ -38,7 +37,8 @@ public class GameModel {
     private void setGameLocations(ArrayList<Graph> locations) {
         for (Graph locationGraph : locations) {
             String id = locationGraph.getId().getId();
-            String name = locationGraph.getNodes(true).get(0).getId().getId(); // the id of nodes[0] should be 'carbin'
+            // there would be only one location in a cluster graph, so just use the first node
+            String name = locationGraph.getNodes(true).get(0).getId().getId();
             String description = locationGraph.getNodes(true).get(0).getAttribute("description");
             Location location = new Location(name, description);
             ArrayList<Graph> attributes = locationGraph.getSubgraphs();
@@ -46,7 +46,6 @@ public class GameModel {
             locationsMap.put(name, location);
             if (id.equalsIgnoreCase("cluster001")) {
                 birthPlace = location;
-//                currentLocation = name; //todo delete
             }
             if (id.equalsIgnoreCase("cluster999")) {
                 storeroom = location;
@@ -56,9 +55,6 @@ public class GameModel {
 
     private void setAttributes(ArrayList<Graph> attributes, Location location) {
         for (Graph attribute : attributes) {
-            //这里面，就是characters、furniture和artefacts的graph，
-            // 怎么分辨哪个graph是哪个呢？看id匹配string？有点蠢。
-            // todo 有没有别的办法？
             String id = attribute.getId().getId();
             if (attribute.getNodes(true).size() > 0) {
                 for (int i = 0; i < attribute.getNodes(true).size(); i++) {
@@ -81,8 +77,10 @@ public class GameModel {
 
     private void setPaths(ArrayList<Edge> paths) {
         for (Edge path : paths) {
+            // the start location of a path
             String source = path.getSource().getNode().getId().getId();
             Location sourceLocation = locationsMap.get(source);
+            // the target location of a path
             String target = path.getTarget().getNode().getId().getId();
             Location targetLocation = locationsMap.get(target);
             sourceLocation.addPaths(targetLocation);
@@ -90,9 +88,7 @@ public class GameModel {
     }
 
     private void setGameAction(NodeList actions) {
-        //todo 可能会用到的comments
-//         Get the first action (only the odd items are actually actions - 1, 3, 5 etc.)
-        // Get the first trigger phrase
+        // Get actions (only the odd items are actually actions - 1, 3, 5 etc.)
         for (int i = 1; i < actions.getLength(); i+=2) {
             GameAction newAction = new GameAction();
             Element action = (Element) actions.item(i);
@@ -101,6 +97,7 @@ public class GameModel {
             setEntities(action, "produced", newAction);
             String narration = action.getElementsByTagName("narration").item(0).getTextContent();
             newAction.setNarration(narration);
+            // Get trigger phrases
             Element triggers = (Element) action.getElementsByTagName("triggers").item(0);
             setTriggers(triggers, newAction);
         }
@@ -109,18 +106,20 @@ public class GameModel {
     private void setTriggers(Element triggers, GameAction newAction) {
         NodeList keywords = triggers.getElementsByTagName("keyword");
         for (int i = 0; i < keywords.getLength(); i++) {
+            // get trigger's text content
             String keyword = keywords.item(i).getTextContent();
             if (actionsMap.containsKey(keyword)) {
                 HashSet<GameAction> actions = actionsMap.get(keyword);
                 actions.add(newAction);
             } else {
-                HashSet<GameAction> actions = new HashSet<GameAction>();
+                HashSet<GameAction> actions = new HashSet<>();
                 actions.add(newAction);
                 actionsMap.put(keyword, actions);
             }
         }
     }
-
+// set all the entities of a game action
+// tag name could be subject, consumed and produced
     private void setEntities(Element action, String tagName, GameAction newAction) {
         int n = action.getElementsByTagName(tagName).getLength();
         NodeList tags = action.getElementsByTagName(tagName);
@@ -163,10 +162,6 @@ public class GameModel {
     public Location getLocation(String name) {
         return locationsMap.get(name);
     }
-// todo delete
-//    public void setCurrentLocation(String locationName) {
-//        currentLocation = locationName;
-//    }
 
     public void setCurrentPlayer(String playerName) {
         currentPlayer = playerName;

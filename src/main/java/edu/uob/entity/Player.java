@@ -5,9 +5,10 @@ import edu.uob.GameEntity;
 import java.util.HashMap;
 
 public class Player extends GameEntity {
-    HashMap<String, Artefact> inventory;
-    int healthLevel = 3;
-    Location currentLocation;
+    private final HashMap<String, Artefact> inventory;
+    private int healthLevel = 3;
+    private Location currentLocation;
+
     public Player(String name, String description, Location birthPlace) {
         super(name, description);
         inventory = new HashMap<>();

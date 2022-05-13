@@ -26,7 +26,6 @@ public final class GameServer {
     private final GameController controller;
 
     public static void main(String[] args) throws IOException {
-        //todo path里需要把文件名字改了。估计是从args里读后两个参数。
         File entitiesFile = Paths.get("config" + File.separator + "basic-entities.dot").toAbsolutePath().toFile();
         File actionsFile = Paths.get("config" + File.separator + "basic-actions.xml").toAbsolutePath().toFile();
         GameServer server = new GameServer(entitiesFile, actionsFile);
@@ -70,6 +69,7 @@ public final class GameServer {
     }
 
     private NodeList actionsFileParser(File actionsFile) {
+        // parse .xml files
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document document = builder.parse(actionsFile);

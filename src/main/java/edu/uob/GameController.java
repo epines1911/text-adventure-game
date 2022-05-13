@@ -14,11 +14,13 @@ public class GameController {
 
     public void commandParser(String command) throws GameException {
         message = "";
+        // get and check player's name
         String[] names = command.split(":");
         if (names.length < 2) {
             throw new GameException("Please enter a command");
         }
         setPlayer(names[0]);
+        // get and check every command
         String[] tokens = names[1].toLowerCase().split("\\s+");
         if (Arrays.asList(tokens).contains("and")) {
             throw new GameException("Please enter only one entity in one command.");
@@ -31,10 +33,10 @@ public class GameController {
             case "GOTO" -> gotoAction(tokens);
             case "LOOK" -> lookAction();
             case "HEALTH" -> healthAction(tokens);
-            default -> normalActionParser(names[1].toLowerCase(), tokens);
+            default -> normalActionParser(names[1].toLowerCase());
         }
     }
-
+// add a new player or set current player
     private void setPlayer(String name) throws GameException {
         if (!isValidName(name)) {
             throw new GameException("Player's name is invalid");
@@ -80,7 +82,7 @@ public class GameController {
         }
         return aimTrigger;
     }
-
+// built-in command: inventory
     private void inventoryAction(String[] tokens) throws GameException {
         if (tokens.length > 2) {
             throw new GameException("If you want to check your inventory, " +
@@ -89,20 +91,20 @@ public class GameController {
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         message += "There are " + inventory.size() + " artefacts in your inventory: \n";
         for (Artefact artefact : inventory.values()) {
-            message += artefact.getName();
-            message += ": ";
-            message += artefact.getDescription();
-            message += "\n";
+            // get every artefact's name and description
+            message += getEntityInfo(artefact);
         }
     }
-
+// built-in command: get
     private void getAction(String[] tokens) throws GameException {
         if (tokens.length < 3 || tokens.length > 4) {
             throw new GameException("Please enter one item's name. e.g: get name");
         }
-        tokens[Arrays.asList(tokens).indexOf("get")] = "";// delete the string of 'trigger' in tokens
+        // delete the string of 'get' in tokens
+        tokens[Arrays.asList(tokens).indexOf("get")] = "";
         HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
         Set<String> key = artefacts.keySet();
+        // check if there are more than one valid subjects in a command
         String aimName = checkDoubleSubjects(tokens, key);
         Artefact newArtefact = artefacts.get(aimName);
         model.getCurrentPlayer().getInventory().put(aimName, newArtefact);
@@ -117,63 +119,69 @@ public class GameController {
                 if (aimName == null || aimName.equalsIgnoreCase(token)) {
                     aimName = token.toLowerCase();
                 } else {
-                    throw new GameException("Find more than one artefact to get.");
+            // if the program find more than one valid subject in a command, throw an exception.
+                    throw new GameException("Find more than one subject to get.");
                 }
             }
         }
         if (aimName == null) {
-            throw new GameException("Cannot find this artefact in the current location.");
+            throw new GameException("Cannot find this subject in the current location.");
         }
         return aimName;
     }
-
+// built-in command: drop
     private void dropAction(String[] tokens) throws GameException {
         if (tokens.length < 3 || tokens.length > 4) {
             throw new GameException("Please enter one item's name. e.g: drop name");
         }
-        tokens[Arrays.asList(tokens).indexOf("drop")] = "";// delete the string of 'trigger' in tokens
+        // delete the string of 'drop' in tokens
+        tokens[Arrays.asList(tokens).indexOf("drop")] = "";
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         Set<String> key = inventory.keySet();
+        // check if there are more than one valid subjects in a command
         String aimName = checkDoubleSubjects(tokens, key);
         Artefact newArtefact = inventory.get(aimName);
         model.getCurrentPlayer().getLocation().addArtefact(newArtefact);
         model.getCurrentPlayer().getInventory().remove(aimName);
         message = "You dropped a " + aimName;
     }
-
+// built-in command: goto
     private void gotoAction(String[] tokens) throws GameException {
         if (tokens.length < 3) {
             throw new GameException("Please enter the location's name. e.g: goto name");
         }
-        tokens[Arrays.asList(tokens).indexOf("goto")] = "";// delete the string of 'trigger' in tokens
+        // delete the string of 'goto' in tokens
+        tokens[Arrays.asList(tokens).indexOf("goto")] = "";
         Set<String> key = model.getCurrentPlayer().getLocation().getPaths().keySet();
+        // check if there are more than one valid subjects in a command
         String aimName = checkDoubleSubjects(tokens, key);
         model.getCurrentPlayer().setLocation(model.getLocation(aimName));
+        // return detailed information of a new location
         lookAction();
     }
-
+// built-in command: look
     private void lookAction() {
         message += "You are in " + model.getCurrentPlayer().getLocation().getName() +": "
                 + model.getCurrentPlayer().getLocation().getDescription() +"\n";
         HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
         message += "There are " + artefacts.size() + " artefacts in this location: \n";
         for (Artefact artefact: artefacts.values()) {
-            message += lookEntityInfo(artefact);
+            message += getEntityInfo(artefact);
         }
         HashMap<String, Furniture> furniture = model.getCurrentPlayer().getLocation().getFurniture();
         message += "There are " + furniture.size() + " furniture in this location: \n";
         for (Furniture furnitureItem: furniture.values()) {
-            message += lookEntityInfo(furnitureItem);
+            message += getEntityInfo(furnitureItem);
         }
         HashMap<String, Character> characters = model.getCurrentPlayer().getLocation().getCharacters();
         message += "There are " + characters.size() + " characters in this location: \n";
         for (Character character: characters.values()) {
-            message += lookEntityInfo(character);
+            message += getEntityInfo(character);
         }
         HashMap<String, Player> players = model.getPlayers();
         message += "There are " + players.size() + " players in this location: \n";
         for (Player player: players.values()) {
-            message += lookEntityInfo(player);
+            message += getEntityInfo(player);
         }
         Set<String> paths = model.getCurrentPlayer().getLocation().getPaths().keySet();
         message += "There are " + paths.size() + " paths: \n";
@@ -182,8 +190,8 @@ public class GameController {
             message += "\n";
         }
     }
-
-    private String lookEntityInfo(GameEntity entity) {
+// return a string including an entity's name and description
+    private String getEntityInfo(GameEntity entity) {
         String information = "";
         information += entity.getName();
         information += ": ";
@@ -191,7 +199,7 @@ public class GameController {
         information += "\n";
         return information;
     }
-
+// built-in command: health
     private void healthAction(String[] tokens) throws GameException {
         if (tokens.length > 2) {
             throw new GameException("If you want to check your health, " +
@@ -199,27 +207,28 @@ public class GameController {
         }
         message = "Your health is " + model.getCurrentPlayer().getHealthLevel();
     }
-
-    private void normalActionParser(String command, String[] tokens) throws GameException {
+// parse every non-built-in command
+    private void normalActionParser(String command) throws GameException {
         TreeMap<String, HashSet<GameAction>> actionMap = model.getActionsMap();
         Set<String> triggers = actionMap.keySet();
-        HashSet<GameAction> aimActionAet = null;
+        // check if there are more than one valid game action's set
+        HashSet<GameAction> aimActionSet = null;
         for (String trigger : triggers) {
             if (command.toLowerCase().contains(trigger)) {
                 HashSet<GameAction> oneActionSet = actionMap.get(trigger);
-                if (aimActionAet == null || aimActionAet == oneActionSet) {
-                    aimActionAet = oneActionSet;
+                if (aimActionSet == null || aimActionSet == oneActionSet) {
+                    aimActionSet = oneActionSet;
                     command = command.toLowerCase().replaceFirst(trigger, "");
                 } else {
                     throw new GameException("Find more than one valid trigger in command.");
                 }
             }
         }
-        if (aimActionAet == null) {
+        if (aimActionSet == null) {
             throw new GameException("Cannot find a valid trigger in command.");
         }
         // compare subjects and find which action should be executed
-        checkSubjects(aimActionAet, command);
+        checkSubjects(aimActionSet, command);
     }
 
     private void checkSubjects(HashSet<GameAction> actions, String command) throws GameException {
@@ -227,12 +236,14 @@ public class GameController {
         for (GameAction action: actions) {
             ArrayList<String> subjects = action.getSubjects();
             int counter = 0;
+            // check if the command contains at least one required subject
             for (String subject : subjects) {
                 if (command.toLowerCase().contains(subject)) {
                     counter += 1;//todo action里的subjects用arraylist记录的，不咋地，无法防止重复。
                 }
             }
             if (counter <= subjects.size()) {
+        // if the program find more than one action could be executed, throw an exception
                 if (aimAction != null && aimAction != action) {
                     throw new GameException("Find more than one action to be executed.");
                 }
@@ -246,15 +257,14 @@ public class GameController {
     }
 
     private void executeAction(GameAction action) throws GameException {
-        HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         ArrayList<String> consumedItems = action.getConsumed();
-        // check all the consumed entities are available,
-        // then move them to storeroom.
+// check if all the consumed entities are available, then reduce health value or move them to storeroom.
         for (String item : consumedItems) {
             if (item.equalsIgnoreCase("health")) {
                 model.getCurrentPlayer().healthLevelDown();
             } else if (!checkInventory(item) && !checkArtefacts(item) && !checkFurniture(item)
                     && !checkCharacters(item) && !checkPaths(item)) {
+// if this consumed subject isn't 'health' or isn't available as an entity, throw an exception
                 throw new GameException(item + " is not available.");
             }
         }
@@ -262,14 +272,14 @@ public class GameController {
             restartGame();
         } else {
             ArrayList<String> producedItems = action.getProduced();
-            // move produced entities to current location
+            // produce new entities and add them to current location
             for (String item : producedItems) {
                 produceEntity(item);
             }
             message = action.getNarration();
         }
     }
-    //todo 这几个check或许可以参照produceEntities给合并起来。
+// check if the consumed subject is available in inventory, then remove it.
     private boolean checkInventory(String name) {
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         if (!inventory.containsKey(name)) {
@@ -280,7 +290,7 @@ public class GameController {
         inventory.remove(name);
         return true;
     }
-
+// check if the consumed subject is available as an artefact in current location, then remove it.
     private boolean checkArtefacts(String name) {
         HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
         if (!artefacts.containsKey(name)) {
@@ -291,7 +301,7 @@ public class GameController {
         artefacts.remove(name);
         return true;
     }
-
+// check if the consumed subject is available as furniture in current location, then remove it.
     private boolean checkFurniture(String name) {
         HashMap<String, Furniture> furniture = model.getCurrentPlayer().getLocation().getFurniture();
         if (!furniture.containsKey(name)) {
@@ -302,7 +312,7 @@ public class GameController {
         furniture.remove(name);
         return true;
     }
-
+// check if the consumed subject is available as a character in current location, then remove it.
     private boolean checkCharacters(String name) {
         HashMap<String, Character> character = model.getCurrentPlayer().getLocation().getCharacters();
         if (!character.containsKey(name)) {
@@ -313,17 +323,16 @@ public class GameController {
         character.remove(name);
         return true;
     }
-
+// check if the consumed subject is available as a location in current location's path, then remove it.
     private boolean checkPaths(String name) {
         HashMap<String, Location> paths = model.getCurrentPlayer().getLocation().getPaths();
         if (!paths.containsKey(name)) {
             return false;
         }
-        Location consumed = paths.get(name);//todo delete
         paths.remove(name);
         return true;
     }
-
+// produce a new entity according to its type, then add it to current location
     private void produceEntity(String name) {
         Location currentLocation = model.getCurrentPlayer().getLocation();
         Location storeroom = model.getStoreroom();
@@ -357,13 +366,14 @@ public class GameController {
     }
 
     private void restartGame() {
+        // when a player died, empty the player's inventory
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         Location currentLocation = model.getCurrentPlayer().getLocation();
-        for (Artefact artefact :
-                inventory.values()) {
+        for (Artefact artefact : inventory.values()) {
             currentLocation.addArtefact(artefact);
         }
         inventory.clear();
+        // then send the player back to birthplace with full health status
         model.getCurrentPlayer().setFullHealth();
         model.getCurrentPlayer().setLocation(model.getBirthPlace());
         message = "You died and lost all the artefacts in your inventory. When you open your eyes, " +

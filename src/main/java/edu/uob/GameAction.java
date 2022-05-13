@@ -1,9 +1,6 @@
 package edu.uob;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.TreeMap;
 
 public class GameAction
 {
@@ -14,9 +11,9 @@ public class GameAction
     private String narration;
 
     public GameAction() {
-        subjects = new ArrayList<String>();
-        consumed = new ArrayList<String>();
-        produced = new ArrayList<String>();
+        subjects = new ArrayList<>();
+        consumed = new ArrayList<>();
+        produced = new ArrayList<>();
     }
 
     public void setNarration(String newNarration) {

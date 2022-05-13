@@ -12,10 +12,10 @@ public class Location extends GameEntity {
 
     public Location(String name, String description) {
         super(name, description);
-        paths = new HashMap<String, Location>();
-        artefacts = new HashMap<String, Artefact>();
-        furniture = new HashMap<String, Furniture>();
-        characters = new HashMap<String, Character>();
+        paths = new HashMap<>();
+        artefacts = new HashMap<>();
+        furniture = new HashMap<>();
+        characters = new HashMap<>();
     }
 
     public HashMap<String, Location> getPaths() {
@@ -49,7 +49,7 @@ public class Location extends GameEntity {
     public void addPaths(Location entity) {
         paths.put(entity.getName(), entity);
     }
-
+// find the type of an entity according to its name
     public String getEntityType(String name) {
         if (artefacts.containsKey(name)) {
             return "artefact";
