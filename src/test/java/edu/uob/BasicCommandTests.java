@@ -40,6 +40,7 @@ final class BasicCommandTests {
 
   @ParameterizedTest
   @ValueSource(strings = {
+          "",
           " alice",
           "adl dlf*af",
           "1lksjf a",
@@ -56,14 +57,20 @@ final class BasicCommandTests {
     server.handleCommand("player a: get potion");
     response = server.handleCommand("player a: inv");
     assertTrue(response.contains("potion"));
+    response = server.handleCommand("player a: inv inventory");
+    assertTrue(response.contains("ERROR"));
   }
 
   @Test
   void testGotoAction() {
     String response = server.handleCommand("player a: goto forest");
     assertTrue(response.contains("You are in forest"));
+    response = server.handleCommand("player a: goto cabin goto");
+    assertTrue(response.contains("You are in cabin"));
     response = server.handleCommand("player a: goto cellar");
     assertTrue(response.contains("ERROR"));
+    response = server.handleCommand("player a: goto forest abc");
+    assertTrue(response.contains("You are in forest"));
   }
 
   @Test
@@ -94,11 +101,19 @@ final class BasicCommandTests {
 
   @ParameterizedTest
   @ValueSource(strings = {
+          "player a:",
           "player a: get potion and goto forest",
-          "player a: get drink attack potion"}) //todo 第三个目前不会判定错误，不行就删了。"player a: get potion forest"
+          "player a: get drink attack potion"})
   void testMultipleInvalidActions(String command) {
     String response = server.handleCommand(command);
     assertTrue(response.contains("ERROR"));
+  }
+
+
+  @Test
+  void testMultipleValidActions() {
+    String response2 = server.handleCommand("player a: get potion forest");
+    assertTrue(response2.contains("picked up a potion"));
   }
 
   //test commands with different case words

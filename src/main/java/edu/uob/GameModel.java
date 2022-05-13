@@ -182,7 +182,7 @@ public class GameModel {
         } else if (name.equalsIgnoreCase("health")) {
             return "health";
         } else {
-            return storeroom.getEntityType(name); //todo 要不要加入别的地点的匹配
+            return storeroom.getEntityType(name);
         }
     }
 }

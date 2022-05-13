@@ -49,6 +49,14 @@ final class ExtendedCommandTests {
         assertTrue(response.contains("cut down the tree"));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "player a: get potion coin"})
+    void testMultipleInvalidActions(String command) {
+        String response = server.handleCommand(command);
+        assertTrue(response.contains("ERROR"));
+    }
+
     @Test
     void testMultipleActions() {
         server.handleCommand("player a: get potion");

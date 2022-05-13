@@ -21,8 +21,9 @@ public class GameController {
         }
         setPlayer(names[0]);
         // get and check every command
-        String[] tokens = names[1].toLowerCase().split("\\s+");
-        if (Arrays.asList(tokens).contains("and")) {
+        String[] originTokens = names[1].toLowerCase().split("\\s+");
+        HashSet<String> tokens = getUniqueToken(originTokens);
+        if (tokens.contains("and")) {
             throw new GameException("Please enter only one entity in one command.");
         }
         String trigger = checkDoubleTrigger(tokens);
@@ -59,21 +60,24 @@ public class GameController {
         // including space, "-", and "'".
         return aimString.matches("^[a-zA-Z]+[-\'\\sa-zA-Z]*");
     }
+// delete empty string and duplicated string in a token array
+    private HashSet<String> getUniqueToken(String[] tokens) {
+        HashSet<String> filter = new HashSet<>();
+        for (String token : tokens) {
+            if (token.length() > 0) {
+                filter.add(token);
+            }
+        }
+        return filter;
+    }
 
-    private String checkDoubleTrigger(String[] tokens) throws GameException {
-        HashSet<String> builtInTrigger = new HashSet<>();
-        builtInTrigger.add("inventory");
-        builtInTrigger.add("inv");
-        builtInTrigger.add("get");
-        builtInTrigger.add("drop");
-        builtInTrigger.add("goto");
-        builtInTrigger.add("look");
-        builtInTrigger.add("health");
+    private String checkDoubleTrigger(HashSet<String> tokens) throws GameException {
+        HashSet<String> builtInTriggers = getBuiltInTriggerSet();
         int counter = 0;
         String aimTrigger = "";
-        for (String trigger : builtInTrigger) {
+        for (String trigger : builtInTriggers) {
             for (String token : tokens) {
-                if (token.equalsIgnoreCase(trigger) && token.length() > 0) {
+                if (token.equalsIgnoreCase(trigger)) {
                     counter += 1;
                     if (counter > 1) {
                         throw new GameException("Find more than one built-in action to be executed.");
@@ -84,9 +88,31 @@ public class GameController {
         }
         return aimTrigger;
     }
+    // get a string set with all built-in command triggers
+    private HashSet<String> getBuiltInTriggerSet() {
+        HashSet<String> builtInTriggers = new HashSet<>();
+        builtInTriggers.add("inventory");
+        builtInTriggers.add("inv");
+        builtInTriggers.add("get");
+        builtInTriggers.add("drop");
+        builtInTriggers.add("goto");
+        builtInTriggers.add("look");
+        builtInTriggers.add("health");
+        return builtInTriggers;
+    }
+    // check if this string is a built-in command trigger
+    private boolean isBuiltInTrigger(String token) {
+        HashSet<String> builtInTriggers = getBuiltInTriggerSet();
+        for (String trigger: builtInTriggers) {
+            if (token.equalsIgnoreCase(trigger)) {
+                return true;
+            }
+        }
+        return false;
+    }
 // built-in command: inventory
-    private void inventoryAction(String[] tokens) throws GameException {
-        if (tokens.length > 2) {
+    private void inventoryAction(HashSet<String> tokens) throws GameException {
+        if (tokens.size() > 1) {
             throw new GameException("If you want to check your inventory, " +
                     "please enter: 'inv' or 'inventory'.");
         }
@@ -98,12 +124,12 @@ public class GameController {
         }
     }
 // built-in command: get
-    private void getAction(String[] tokens) throws GameException {
-        if (tokens.length < 3 || tokens.length > 4) {
+    private void getAction(HashSet<String> tokens) throws GameException {
+        if (tokens.size() < 2 || tokens.size() > 3) {
             throw new GameException("Please enter one item's name. e.g: get name");
         }
         // delete the string of 'get' in tokens
-        tokens[Arrays.asList(tokens).indexOf("get")] = "";
+        tokens.remove("get");
         HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
         Set<String> key = artefacts.keySet();
         // check if there are more than one valid subjects in a command
@@ -114,10 +140,10 @@ public class GameController {
         message = "You picked up a " + aimName;
     }
 
-    private String checkDoubleSubjects(String[] tokens, Set<String> key) throws GameException {
+    private String checkDoubleSubjects(HashSet<String> tokens, Set<String> key) throws GameException {
         String aimName = null;
         for (String token : tokens) {
-            if (key.contains(token.toLowerCase())) {
+            if (key.contains(token)) {
                 if (aimName == null || aimName.equalsIgnoreCase(token)) {
                     aimName = token.toLowerCase();
                 } else {
@@ -125,19 +151,38 @@ public class GameController {
                     throw new GameException("Find more than one subject to get.");
                 }
             }
+            //todo
+//            else if (!isArticle(token) && !isBuiltInTrigger(token)) {
+//                throw new GameException("Invalid word in command.");
+//            }
         }
         if (aimName == null) {
             throw new GameException("Cannot find this subject in the current location.");
         }
         return aimName;
     }
+// check if this string is an article (e.g. a, an, the, etc.)
+    private boolean isArticle(String token) {
+        HashSet<String> articles = new HashSet<>();
+        articles.add("a");
+        articles.add("the");
+        articles.add("that");
+        articles.add("this");
+        articles.add("an");
+        for (String article: articles) {
+            if (token.equalsIgnoreCase(article)) {
+                return true;
+            }
+        }
+        return false;
+    }
 // built-in command: drop
-    private void dropAction(String[] tokens) throws GameException {
-        if (tokens.length < 3 || tokens.length > 4) {
+    private void dropAction(HashSet<String> tokens) throws GameException {
+        if (tokens.size() < 2 || tokens.size() > 3) {
             throw new GameException("Please enter one item's name. e.g: drop name");
         }
         // delete the string of 'drop' in tokens
-        tokens[Arrays.asList(tokens).indexOf("drop")] = "";
+        tokens.remove("drop");
         HashMap<String, Artefact> inventory = model.getCurrentPlayer().getInventory();
         Set<String> key = inventory.keySet();
         // check if there are more than one valid subjects in a command
@@ -148,12 +193,12 @@ public class GameController {
         message = "You dropped a " + aimName;
     }
 // built-in command: goto
-    private void gotoAction(String[] tokens) throws GameException {
-        if (tokens.length < 3) {
+    private void gotoAction(HashSet<String> tokens) throws GameException {
+        if (tokens.size() < 2) {
             throw new GameException("Please enter the location's name. e.g: goto name");
         }
         // delete the string of 'goto' in tokens
-        tokens[Arrays.asList(tokens).indexOf("goto")] = "";
+        tokens.remove("goto");
         Set<String> key = model.getCurrentPlayer().getLocation().getPaths().keySet();
         // check if there are more than one valid subjects in a command
         String aimName = checkDoubleSubjects(tokens, key);
@@ -202,8 +247,8 @@ public class GameController {
         return information;
     }
 // built-in command: health
-    private void healthAction(String[] tokens) throws GameException {
-        if (tokens.length > 2) {
+    private void healthAction(HashSet<String> tokens) throws GameException {
+        if (tokens.size() > 1) {
             throw new GameException("If you want to check your health, " +
                     "please enter: 'health'.");
         }
@@ -241,10 +286,10 @@ public class GameController {
             // check if the command contains at least one required subject
             for (String subject : subjects) {
                 if (command.toLowerCase().contains(subject)) {
-                    counter += 1;//todo action里的subjects用arraylist记录的，不咋地，无法防止重复。
+                    counter += 1;
                 }
             }
-            if (counter <= subjects.size()) {
+            if (counter <= subjects.size() && counter > 0) {
         // if the program find more than one action could be executed, throw an exception
                 if (aimAction != null && aimAction != action) {
                     throw new GameException("Find more than one action to be executed.");
