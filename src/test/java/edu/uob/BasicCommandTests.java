@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.io.File;
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // PLEASE READ:
@@ -38,6 +39,23 @@ final class BasicCommandTests {
   // Add more unit tests or integration tests here.
 
   @Test
+  void testInvAction() {
+    String response = server.handleCommand("player a: inventory");
+    assertTrue(response.contains("0"));
+    server.handleCommand("player a: get potion");
+    response = server.handleCommand("player a: inv");
+    assertTrue(response.contains("potion"));
+  }
+
+  @Test
+  void testGotoAction() {
+    String response = server.handleCommand("player a: goto forest");
+    assertTrue(response.contains("You are in forest"));
+    response = server.handleCommand("player a: goto cellar");
+    assertTrue(response.contains("ERROR"));
+  }
+
+  @Test
   void testMultipleActions() {
     String response0 = server.handleCommand("player a: get potion");
     assertTrue(response0.contains("You picked up a potion"));
@@ -66,17 +84,45 @@ final class BasicCommandTests {
   @ParameterizedTest
   @ValueSource(strings = {
           "player a: get potion and goto forest",
-          "player a: drink attack potion"}) //todo 第三个目前不会判定错误，不行就删了。, "player a: get potion forest"
+          "player a: get drink attack potion"}) //todo 第三个目前不会判定错误，不行就删了。"player a: get potion forest"
   void testMultipleInvalidActions(String command) {
     String response = server.handleCommand(command);
     assertTrue(response.contains("ERROR"));
   }
 
-  //todo 既然转了lowercase，那就测几个大小写混合的command。
+  //test commands with different case words
+  @Test
+  void testCaseSensitiveCommands() {
+    String response = server.handleCommand("player a: gEt potIon");
+    assertFalse(response.contains("ERROR"));
+    response = server.handleCommand("player a: loOK");
+    assertFalse(response.contains("ERROR"));
+    response = server.handleCommand("player a: iNv");
+    assertFalse(response.contains("ERROR"));
+    response = server.handleCommand("player a: DRop PoTion");
+    assertFalse(response.contains("ERROR"));
+    response = server.handleCommand("player a: drINk potiON");
+    assertFalse(response.contains("ERROR"));
+  }
 
-  //todo 测cut down tree
+  // test drop the same artefact twice
+  @Test
+  void testDoubleDropAction() {
+    server.handleCommand("player a: gEt potIon");
+    String response = server.handleCommand("player a: DRop PoTion");
+    assertTrue(response.contains("dropped a potion"));
+    response = server.handleCommand("player a: drOP pOtiOn");
+    assertTrue(response.contains("ERROR"));
+  }
 
-  //todo 用掉之后再用，false。
+  // test drop the same artefact twice
+  @Test
+  void testDoubleGetAction() {
+    String response = server.handleCommand("player a: gEt potIon");
+    assertTrue(response.contains("picked up a potion"));
+    response = server.handleCommand("player a: geT pOtIoN");
+    assertTrue(response.contains("ERROR"));
+  }
 
   @Test
   void testLookOtherPlayers() {

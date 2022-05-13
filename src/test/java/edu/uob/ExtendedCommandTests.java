@@ -2,6 +2,9 @@ package edu.uob;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
 import java.io.File;
 import java.nio.file.Paths;
 
@@ -23,8 +26,8 @@ final class ExtendedCommandTests {
     @Test
     void testLookingAroundStartLocation() {
         String response = server.handleCommand("player a: look").toLowerCase();
-        assertTrue(response.contains("log cabin"), "Did not see description of artifacts in response to look");
-        assertTrue(response.contains("3 artefacts"), "Did not see description of room in response to look");
+        assertTrue(response.contains("log cabin"), "Did not see description of room in response to look");
+        assertTrue(response.contains("3 artefacts"), "Did not see description of artifacts in response to look");
         assertTrue(response.contains("silver coin"), "Did not see description of artifacts in response to look");
         assertTrue(response.contains("magic potion"), "Did not see description of artifacts in response to look");
         assertTrue(response.contains("wooden trapdoor"), "Did not see description of furniture in response to look");
@@ -32,12 +35,18 @@ final class ExtendedCommandTests {
 
     // Add more unit tests or integration tests here.
 
-    @Test
-    void testLookOtherPlayers() {
-        server.handleCommand("Kun: get potion");
-        String response = server.handleCommand("Rui: look");
-        assertTrue(response.contains("2 players"));
-        assertTrue(response.contains("Kun: A player"));
+    //test when commands contain at least one or all subjects
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "player a: cut tree",
+            "player a: chop tree with axe",
+            "player a: cutdown with axe",
+            "player a: cut down with axe"})
+    void testAtLeastOneSubject(String command) {
+        server.handleCommand("player a: get axe");
+        server.handleCommand("player a: goto forest");
+        String response = server.handleCommand(command);
+        assertTrue(response.contains("cut down the tree"));
     }
 
     @Test
@@ -100,6 +109,18 @@ final class ExtendedCommandTests {
         assertFalse(response.contains("looks like the soil has been recently disturbed"));
     }
 
+    //test trigger: cut down and cutdown
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "player a: cutdown with axe",
+            "player a: cut down with axe"})
+    void testTriggerWithSpace(String command) {
+        server.handleCommand("player a: get axe");
+        server.handleCommand("player a: goto forest");
+        String response = server.handleCommand(command);
+        assertTrue(response.contains("cut down the tree"));
+    }
+
 //    @Test
 //    void testMultipleInvalidActions() {
 //        String response1 = server.handleCommand("player a: get potion and goto forest");
@@ -112,5 +133,4 @@ final class ExtendedCommandTests {
 ////    assertTrue(response4.contains("unlock the trapdoor"));
 //    }
 
-    //todo 既然转了lowercase，那就测几个大小写混合的command。
 }
