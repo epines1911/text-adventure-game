@@ -270,7 +270,7 @@ public class GameController {
         for (String trigger : triggers) {
             if (command.toLowerCase().contains(trigger)) {
                 HashSet<GameAction> oneActionSet = actionMap.get(trigger);
-                if (aimActionSet == null || aimActionSet == oneActionSet) {
+                if (aimActionSet == null || isSameActionSet(aimActionSet, oneActionSet)) {
                     aimActionSet = oneActionSet;
                     command = command.toLowerCase().replaceFirst(trigger, "");
                 } else {
@@ -283,6 +283,18 @@ public class GameController {
         }
         // compare subjects and find which action should be executed
         checkSubjects(aimActionSet, command);
+    }
+
+    private boolean isSameActionSet(HashSet<GameAction> set1, HashSet<GameAction> set2) {
+        HashSet<String> narration = new HashSet<>();
+        for (GameAction action1 : set1) {
+            narration.add(action1.getNarration());
+        }
+        int size = narration.size();
+        for (GameAction action2 : set2) {
+            narration.add(action2.getNarration());
+        }
+        return size == narration.size();
     }
 
     private void checkSubjects(HashSet<GameAction> actions, String command) throws GameException {

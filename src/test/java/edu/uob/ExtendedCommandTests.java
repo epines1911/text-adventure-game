@@ -35,12 +35,12 @@ final class ExtendedCommandTests {
 
     // Add more unit tests or integration tests here.
 
-    //test the exceptions //todo delete
+    //test the exceptions
     @Test
-    void testExceptions(){
-        //todo 测cut cutdown tree，我觉得有效。
-        String response = server.handleCommand("player b: cut open the tree").toLowerCase();
-        assertTrue(response.contains("error"));
+    void testTwoValidTrigger(){
+        server.handleCommand("player a: goto forest");
+        String response = server.handleCommand("player a: cut cutdown tree");
+        assertFalse(response.contains("ERROR"));
     }
 
     //test when commands contain at least one or all subjects
@@ -59,6 +59,7 @@ final class ExtendedCommandTests {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "player a: cut open the tree",
             "player a: get potion coin"})
     void testSingleInvalidActions(String command) {
         String response = server.handleCommand(command);

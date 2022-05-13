@@ -145,6 +145,7 @@ final class BasicCommandTests {
 
   @ParameterizedTest
   @ValueSource(strings = {
+          "player a: get a potion",
           "player a: drink potion qwe"})
   void testSingleValidActions(String command) {
     String response = server.handleCommand(command);
