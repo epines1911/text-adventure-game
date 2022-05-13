@@ -70,19 +70,45 @@ final class BasicCommandTests {
     response = server.handleCommand("player a: goto cellar");
     assertTrue(response.contains("ERROR"));
     response = server.handleCommand("player a: goto forest abc");
-    assertTrue(response.contains("You are in forest"));
+    assertTrue(response.contains("ERROR"));
+  }
+
+  @Test
+  void testMultipleGetAndDrop() {
+    // look, get potion, then look
+    String response0 = server.handleCommand("player a: look");
+    assertTrue(response0.contains("Magic potion"));
+    response0 = server.handleCommand("player a: get potion");
+    assertTrue(response0.contains("You picked up a potion"));
+    response0 = server.handleCommand("player a: look");
+    assertFalse(response0.contains("Magic potion"));
+    // check inventory
+    response0 = server.handleCommand("player a: inv");
+    assertTrue(response0.contains("Magic potion"));
+    // drop potion, then look and check inventory
+    response0 = server.handleCommand("player a: drop potion");
+    assertTrue(response0.contains("dropped a potion"));
+    response0 = server.handleCommand("player a: look");
+    assertTrue(response0.contains("Magic potion"));
+    response0 = server.handleCommand("player a: inv");
+    assertFalse(response0.contains("Magic potion"));
   }
 
   @Test
   void testMultipleActions() {
-    String response0 = server.handleCommand("player a: get potion");
+    // look, get potion
+    String response0 = server.handleCommand("player a: look");
+    assertTrue(response0.contains("Magic potion"));
+    response0 = server.handleCommand("player a: get potion");
     assertTrue(response0.contains("You picked up a potion"));
+    // goto forest, get key, then goto cabin
     String response1 = server.handleCommand("player a: goto forest");
     assertTrue(response1.contains("You are in forest"));
     String response2 = server.handleCommand("player a: get key");
     assertTrue(response2.contains("You picked up a key"));
     String response3 = server.handleCommand("player a: goto cabin");
     assertTrue(response3.contains("You are in cabin"));
+    // unlock trapdoor, which will add cellar in paths, then goto cellar
 //    String response4 = server.handleCommand("player a: open trapdoor with the key"); // it is valid
     String response4 = server.handleCommand("player a: unlock with key"); // it is valid
 //    String response4 = server.handleCommand("player a: open trapdoor"); // it is valid
@@ -101,19 +127,28 @@ final class BasicCommandTests {
 
   @ParameterizedTest
   @ValueSource(strings = {
+          "player a: get potion forest",
+          "player a: goto cut forest",
+          "player a: open with key",
+          "player a: open",
+          "player a: get",
+          "player a: get drop potion",
+          "player a: look goto forest",
+          "player a: look open trapdoor",
           "player a:",
           "player a: get potion and goto forest",
           "player a: get drink attack potion"})
-  void testMultipleInvalidActions(String command) {
+  void testSingleInvalidActions(String command) {
     String response = server.handleCommand(command);
     assertTrue(response.contains("ERROR"));
   }
 
-
-  @Test
-  void testMultipleValidActions() {
-    String response2 = server.handleCommand("player a: get potion forest");
-    assertTrue(response2.contains("picked up a potion"));
+  @ParameterizedTest
+  @ValueSource(strings = {
+          "player a: drink potion qwe"})
+  void testSingleValidActions(String command) {
+    String response = server.handleCommand(command);
+    assertFalse(response.contains("ERROR"));
   }
 
   //test commands with different case words
@@ -156,6 +191,9 @@ final class BasicCommandTests {
     String response = server.handleCommand("Rui: look");
     assertTrue(response.contains("2 players"));
     assertTrue(response.contains("Kun: A player"));
+    server.handleCommand("Kun: goto forest");
+    response = server.handleCommand("Rui: look");
+    assertFalse(response.contains("Kun"));
   }
 
   @Test
@@ -171,13 +209,15 @@ final class BasicCommandTests {
     server.handleCommand("player a: hit elf");
     String response1 = server.handleCommand("player a: health");
     assertTrue(response1.contains("Your health is 2")); // the health should be 2
-    server.handleCommand("player a: hit elf");
+    server.handleCommand("player a: attack elf");
     String response2 = server.handleCommand("player a: health");
     assertTrue(response2.contains("Your health is 1")); // the health should be 1
-    String response3 = server.handleCommand("player a: hit elf");
+    String response3 = server.handleCommand("player a: fight elf");
     assertTrue(response3.contains("You died and lost all the artefacts")); // the health should be 0
     server.handleCommand("player a: goto cellar");
     String response4 = server.handleCommand("player a: look");
     assertTrue(response4.contains("potion"));
+    response4 = server.handleCommand("player a: inventory");
+    assertTrue(response4.contains("0 artefacts"));
   }
 }

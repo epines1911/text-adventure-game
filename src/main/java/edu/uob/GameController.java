@@ -32,7 +32,7 @@ public class GameController {
             case "GET" -> getAction(tokens);
             case "DROP" -> dropAction(tokens);
             case "GOTO" -> gotoAction(tokens);
-            case "LOOK" -> lookAction();
+            case "LOOK" -> lookAction(tokens);
             case "HEALTH" -> healthAction(tokens);
             default -> normalActionParser(names[1].toLowerCase());
         }
@@ -150,11 +150,9 @@ public class GameController {
             // if the program find more than one valid subject in a command, throw an exception.
                     throw new GameException("Find more than one subject to get.");
                 }
+            } else if (!isArticle(token) && !isBuiltInTrigger(token)) {
+                throw new GameException("Invalid word in command.");
             }
-            //todo
-//            else if (!isArticle(token) && !isBuiltInTrigger(token)) {
-//                throw new GameException("Invalid word in command.");
-//            }
         }
         if (aimName == null) {
             throw new GameException("Cannot find this subject in the current location.");
@@ -204,10 +202,16 @@ public class GameController {
         String aimName = checkDoubleSubjects(tokens, key);
         model.getCurrentPlayer().setLocation(model.getLocation(aimName));
         // return detailed information of a new location
-        lookAction();
+        HashSet<String> look = new HashSet<>();
+        look.add("look");
+        lookAction(look);
     }
 // built-in command: look
-    private void lookAction() {
+    private void lookAction(HashSet<String> tokens) throws GameException {
+        if (tokens.size() > 1) {
+            throw new GameException("If you want to use 'look' command, " +
+                    "please enter: 'look'.");
+        }
         message += "You are in " + model.getCurrentPlayer().getLocation().getName() +": "
                 + model.getCurrentPlayer().getLocation().getDescription() +"\n";
         HashMap<String, Artefact> artefacts = model.getCurrentPlayer().getLocation().getArtefacts();
@@ -225,10 +229,13 @@ public class GameController {
         for (Character character: characters.values()) {
             message += getEntityInfo(character);
         }
+        String currentLocation = model.getCurrentPlayer().getLocation().getName();
         HashMap<String, Player> players = model.getPlayers();
         message += "There are " + players.size() + " players in this location: \n";
         for (Player player: players.values()) {
-            message += getEntityInfo(player);
+            if (player.getLocation().getName().equalsIgnoreCase(currentLocation)) {
+                message += getEntityInfo(player);
+            }
         }
         Set<String> paths = model.getCurrentPlayer().getLocation().getPaths().keySet();
         message += "There are " + paths.size() + " paths: \n";

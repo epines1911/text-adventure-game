@@ -35,6 +35,14 @@ final class ExtendedCommandTests {
 
     // Add more unit tests or integration tests here.
 
+    //test the exceptions //todo delete
+    @Test
+    void testExceptions(){
+        //todo 测cut cutdown tree，我觉得有效。
+        String response = server.handleCommand("player b: cut open the tree").toLowerCase();
+        assertTrue(response.contains("error"));
+    }
+
     //test when commands contain at least one or all subjects
     @ParameterizedTest
     @ValueSource(strings = {
@@ -52,8 +60,17 @@ final class ExtendedCommandTests {
     @ParameterizedTest
     @ValueSource(strings = {
             "player a: get potion coin"})
-    void testMultipleInvalidActions(String command) {
+    void testSingleInvalidActions(String command) {
         String response = server.handleCommand(command);
+        assertTrue(response.contains("ERROR"));
+    }
+
+    @Test
+    void testDropTwoSubjects() {
+        //test drop two valid subjects at same time
+        server.handleCommand("player a: get potion");
+        server.handleCommand("player a: get coin");
+        String response = server.handleCommand("player a: drop potion coin");
         assertTrue(response.contains("ERROR"));
     }
 
@@ -66,15 +83,11 @@ final class ExtendedCommandTests {
         assertTrue(response.contains("potion"));
         assertTrue(response.contains("axe"));
         assertTrue(response.contains("coin"));
-        // go to forest
-        server.handleCommand("player a: goto forest");
+        server.handleCommand("player a: goto forest");// go to forest
         response = server.handleCommand("player a: chop tree with axe"); // it's valid
-//        response = server.handleCommand("player a: cut tree"); // it's valid
-//        response = server.handleCommand("player a: cutdown with axe"); // it's valid
-//        response = server.handleCommand("player a: cut down with axe"); // it's valid
         assertTrue(response.contains("cut down the tree"));
         response = server.handleCommand("player a: look");
-        assertFalse(response.contains("tree"));
+        assertFalse(response.contains("tree")); // test consume furniture
         server.handleCommand("player a: get key");
         server.handleCommand("player a: get log");
         response = server.handleCommand("player a: inv");
@@ -84,7 +97,7 @@ final class ExtendedCommandTests {
         server.handleCommand("player a: open trapdoor"); // it is valid
         server.handleCommand("player a: goto cellar");
         server.handleCommand("player a: hit elf");
-        server.handleCommand("player a: hit elf");
+        server.handleCommand("player a: fight elf");
         server.handleCommand("player a: drink potion"); // health should be 2
         response = server.handleCommand("player a: health");
         assertTrue(response.contains("health is 2"));
@@ -99,16 +112,12 @@ final class ExtendedCommandTests {
         server.handleCommand("player a: goto forest");
         server.handleCommand("player a: goto riverbank");
         server.handleCommand("player a: blow horn");
-//        server.handleCommand("player a: bridge the river with the log"); // it's valid
         server.handleCommand("player a: bridge the river"); // it's valid
-//        server.handleCommand("player a: bridge with the log"); // it's valid
         response = server.handleCommand("player a: look");
         assertTrue(response.contains("lumberjack"));
         assertTrue(response.contains("clearing"));
         // goto clearing
         server.handleCommand("player a: goto clearing");
-//        server.handleCommand("player a: dig ground with shovel"); // it's valid
-//        server.handleCommand("player a: dig ground"); // it's valid
         response = server.handleCommand("player a: dig with shovel"); // it's valid
         assertTrue(response.contains("dig into the soft ground and unearth a pot of gold"));
         response = server.handleCommand("player a: look");
